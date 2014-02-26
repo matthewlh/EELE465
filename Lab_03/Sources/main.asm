@@ -17,6 +17,7 @@ ADCS1_CH26		EQU %00011010	;ADCS1 configured for CH26 (internal temp. sensor)
 ; Include derivative-specific definitions
             INCLUDE 'derivative.inc'
             
+; how about here?
 
 ; export symbols
             XDEF _Startup, main, _Vtpmovf, bus_write, bus_read, scan_keypad, led_write, lcd_init, SUB_delay
