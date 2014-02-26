@@ -12,6 +12,7 @@ mAddrBus		EQU	$0F		; Mask for the address bus pins on PortB
 ADCS1_CH2		EQU %00000010	;ADCS1 configured for CH2
 ADCS1_CH26		EQU %00011010	;ADCS1 configured for CH26 (internal temp. sensor) 
 
+; what if I add a comment?
 
 ; Include derivative-specific definitions
             INCLUDE 'derivative.inc'
