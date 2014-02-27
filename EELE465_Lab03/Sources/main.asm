@@ -114,7 +114,7 @@ mainLoop:
            	;JSR		interpret_keypad           	           	
            	
            	; Display led_data on leds	
-			JSR		led_write
+			;JSR		led_write
 			
 			NOP
            	
@@ -132,37 +132,45 @@ mainLoop:
 ;* Exit Variables: None 
 ;**************************************************************
 _Vtpmovf:   
+			; presever registers
+			PSHA
+			PSHH
+			PSHX
 
 ;*** Write ADC value to LCD
 			; write to ADCS1 to trigger ADC measurement
 			LDA		ADCSC1
 			STA		ADCSC1	
-						
+								
 			; Send display clear command
 			LDA		#$00
 			JSR		lcd_write
 			LDA		#$01
 			JSR		lcd_write
-			
+						
 			;*** Wait for 20 ms ***
 			LDHX #SUB_delay_cnt
 			
 			; configure loop delays: 0x001388 = 20 ms
 			LDA		#$00
 			STA		2,X
-			LDA		#$13
+			LDA		#$23
 			STA		1,X
 			LDA		#$88
 			STA		0,X
 			
 			; jump to the delay loop
 			JSR		SUB_delay
+
+			; go back to first column and row of LCD
+			LDA		#$00
+			JSR		lcd_write
+			LDA		#$00
+			JSR		lcd_write
 			
 			;  reset lcd_col_idx
 			LDA		#$00
 			STA		lcd_col_idx
-
-			
 			
 			; save adc data
 			LDA		ADCRH
@@ -182,6 +190,12 @@ _Vtpmovf:
 			SUB		adc_data_0
 			STA		adc_data_0
 			
+			; make sure value less than 99
+			CMP		#$63
+			BLO		write_to_lcd
+			LDA		#$63			
+			
+write_to_lcd:
 			; write upper numbder to LCD
 			LDHX	#$000A
 			DIV						; A <= (H:A)/(X), H <= (remainder)
@@ -215,6 +229,9 @@ _Vtpmovf:
 			
 
 ;*** done ***
+			PULX
+			PULH
+			PULA
 
 			;Return from Interrupt
 			RTI
@@ -1093,6 +1110,9 @@ lcd_write:
 ;* Exit Variables:  
 ;**************************************************************
 lcd_char:
+			; preserve HX
+			PSHH
+			PSHX
 
 			; store input parameter			
 			STA		lcd_char_data
@@ -1144,12 +1164,28 @@ lcd_char_write_Char:
 			ORA		#$20
 			JSR		lcd_write
 			
+			;*** Wait for 20 ms ***
+			LDHX #SUB_delay_cnt
+			
+			; configure loop delays: 0x001388 = 20 ms
+			LDA		#$00
+			STA		2,X
+			LDA		#$13
+			STA		1,X
+			LDA		#$88
+			STA		0,X
+			
+			; jump to the delay loop
+			JSR		SUB_delay
+			
 			; increment lcd_col_idx
 			LDA		lcd_col_idx
 			INCA
-			STA		lcd_col_idx			
+			STA		lcd_col_idx						
 			
 			; done
+			PULX
+			PULH
 			RTS
 
 
