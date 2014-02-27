@@ -85,7 +85,7 @@ _Startup:
 			JSR		lcd_init
 			
 			LDA		#$00
-			STA		lcd_col_idx
+			STA		lcd_col_idx				
 			
 			;*** init led_data variable ***
 			LDA		#$00
@@ -98,11 +98,11 @@ _Startup:
 			STA		ADCSC2
 			LDA		#%00001000		;ADLPC=0, ADIV=00, ADLSMP=0, MODE=10-bit, ADICLK=00
 			STA		ADCCFG
-			LDA		#$03			;ADPC2=1
+			LDA		#$04			;ADPC2=1
 			STA		APCTL1
+			
             
 			CLI			; enable interrupts
-			
 			
 
 mainLoop:
@@ -116,28 +116,7 @@ mainLoop:
            	; Display led_data on leds	
 			JSR		led_write
 			
-			; write to ADCS1 to trigger ADC measurement
-			LDA		ADCR
-			STA		ADCSC1	
-			
-			; save adc data
-			LDA		ADCRH
-			STA		adc_data_0
-			LDA		ADCRL
-			STA		adc_data_1
-			
-			; divide adc_data by 4
-			LDHX	adc_data_0
-			LDX		#$04
-			LDA		adc_data_1
-			DIV						; A <= (H:A)/(X)
-			STA		adc_data_0
-			
-			LDA		#$93		
-			SUB		adc_data_0
-			STA		adc_data_0
-           	
-           	NOP
+			NOP
            	
             feed_watchdog
             BRA    	mainLoop
@@ -152,8 +131,78 @@ mainLoop:
 ;* Entry Variables: None
 ;* Exit Variables: None 
 ;**************************************************************
-_Vtpmovf:      
-            
+_Vtpmovf:   
+
+;*** Write ADC value to LCD
+			; write to ADCS1 to trigger ADC measurement
+			LDA		ADCSC1
+			STA		ADCSC1	
+						
+			; Send display clear command
+			LDA		#$00
+			JSR		lcd_write
+			LDA		#$01
+			JSR		lcd_write
+			
+			;*** Wait for 20 ms ***
+			LDHX #SUB_delay_cnt
+			
+			; configure loop delays: 0x001388 = 20 ms
+			LDA		#$00
+			STA		2,X
+			LDA		#$13
+			STA		1,X
+			LDA		#$88
+			STA		0,X
+			
+			; jump to the delay loop
+			JSR		SUB_delay
+			
+			;  reset lcd_col_idx
+			LDA		#$00
+			STA		lcd_col_idx
+
+			
+			
+			; save adc data
+			LDA		ADCRH
+			STA		adc_data_0
+			LDA		ADCRL
+			STA		adc_data_1
+			
+			; divide adc_data by 4
+			LDHX	adc_data_0
+			LDX		#$04
+			LDA		adc_data_1
+			DIV						; A <= (H:A)/(X)
+			STA		adc_data_0
+			
+			; subtract from offset
+			LDA		#$93		
+			SUB		adc_data_0
+			STA		adc_data_0
+			
+			; write upper numbder to LCD
+			LDHX	#$000A
+			DIV						; A <= (H:A)/(X), H <= (remainder)
+			
+			; convert to ASCII char
+			JSR		num_to_char
+			
+			; write to LCD
+			JSR		lcd_char
+			
+			; move remainder from H to A
+			PSHH
+			PULA
+			
+			; convert to ASCII char
+			JSR		num_to_char
+			
+			; write to LCD
+			JSR		lcd_char
+			   
+;*** Other Stuff            
 			; Toggle Heartbeat LED			
 			LDA		led_data			; load current LED pattern
 			EOR		#$80				; toggle bit 7
@@ -978,6 +1027,10 @@ lcd_init:
 ;* Exit Variables:  
 ;**************************************************************
 lcd_write:
+			; preserve HX register
+			PSHH
+			PSHX
+
 			; store param to var for latter
 			STA		lcd_data
 
@@ -1018,6 +1071,10 @@ lcd_write:
 			
 			; jump to the delay loop
 			JSR		SUB_delay
+			
+			; restore HX register
+			PULX
+			PULH
 
 			; done
 			RTS
@@ -1195,13 +1252,3 @@ SUB_delay_done:
 
 
 
-;************************************************************** 
-;* Subroutine Name: ADD_16 
-;* Description: Decrements SUB_delay_cnt until it reaches zero.
-;*				1 count in SUB_delay_cnt is approx 4.019 us
-;*
-;* Registers Modified: None.
-;* Entry Variables: SUB_delay_cnt - 3 byte variable, determines length 
-;*					of time the SUB_delay routine will take to execute.
-;* Exit Variables: SUB_delay_cnt - will be zero at exit. 
-;**************************************************************
