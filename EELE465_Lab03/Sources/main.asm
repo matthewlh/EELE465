@@ -154,7 +154,7 @@ _Vtpmovf:
 			; configure loop delays: 0x001388 = 20 ms
 			LDA		#$00
 			STA		2,X
-			LDA		#$23
+			LDA		#$13
 			STA		1,X
 			LDA		#$88
 			STA		0,X
