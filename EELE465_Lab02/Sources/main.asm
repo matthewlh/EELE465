@@ -36,7 +36,7 @@ MY_ZEROPAGE: SECTION  SHORT
 			lcd_char_data:	DS.B	1	; used by lcd_char subroutine to store a character
 			lcd_col_idx:	DS.B	1	; index of the column of the LCD that the cursor is currently in
 			
-			keypad_data_0:	DS.B	1	; bit flags representing what keys are pressed on they 4x4 keypad
+			keypad_data_0:	DS.B	1	; bit flags representing what keys are pressed on the 4x4 keypad
 			keypad_data_1:	DS.B	1
 			
 			keypad_data_0_old:	DS.B	1	; bit flags representing which keys were pressed on the keypad, the last time it was scanned
