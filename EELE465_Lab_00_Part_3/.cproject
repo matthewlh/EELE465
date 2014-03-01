@@ -25,10 +25,10 @@
 					<folderInfo id="toolchain.config.hcs08.release.734047815." name="/" resourcePath="">
 						<toolChain errorParsers="" id="hcs08.project.toolchain.263189424" name="HCS08 Toolchain" superClass="hcs08.project.toolchain">
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="hc08.toolchain.platform.2032453859" name="HC08 Targetplatform" superClass="hc08.toolchain.platform"/>
-							<builder buildPath="${ProjDirPath}/FLASH" errorParsers="com.freescale.core.ide.cdt.errorParsers.GCCErrorParser;org.eclipse.cdt.core.GmakeErrorParser;com.freescale.core.ide.cdt.errorParsers.LltErrorParser;com.freescale.core.ide.cdt.errorParsers.AsmErrorParser;com.freescale.core.ide.cdt.errorParsers.IcodeErrorParser;com.freescale.core.ide.cdt.errorParsers.CobjErrorParser;com.freescale.core.ide.cdt.errorParsers.S08ErrorParser;com.freescale.core.ide.cdt.errorParsers.LnkErrorParser;com.freescale.core.ide.cdt.errorParsers.MwfeErrorParser" id="hc08.toolchain.builder.1782115644" name="GNU Make Builder.FLASH" superClass="hc08.toolchain.builder"/>
+							<builder buildPath="${ProjDirPath}/FLASH" errorParsers="com.freescale.core.ide.cdt.errorParsers.GCCErrorParser;org.eclipse.cdt.core.GmakeErrorParser;com.freescale.core.ide.cdt.errorParsers.LltErrorParser;com.freescale.core.ide.cdt.errorParsers.AsmErrorParser;com.freescale.core.ide.cdt.errorParsers.IcodeErrorParser;com.freescale.core.ide.cdt.errorParsers.CobjErrorParser;com.freescale.core.ide.cdt.errorParsers.S08ErrorParser;com.freescale.core.ide.cdt.errorParsers.LnkErrorParser;com.freescale.core.ide.cdt.errorParsers.MwfeErrorParser" id="hc08.toolchain.builder.1782115644" keepEnvironmentInBuildfile="false" name="GNU Make Builder" superClass="hc08.toolchain.builder"/>
 							<tool errorParsers="" id="s08.toolchain.decoder.589069808" name="S08 Disassembler" superClass="s08.toolchain.decoder"/>
 							<tool errorParsers="" id="hc08.toolchain.linker.1194023973" name="S08 Linker" superClass="hc08.toolchain.linker">
-								<option id="hc08.toolchain.linker.base.general.paramFile.1384096515" superClass="hc08.toolchain.linker.base.general.paramFile" value="${ProjDirPath}/Project_Settings/Linker_Files/Project.prm" valueType="string"/>
+								<option id="hc08.toolchain.linker.base.general.paramFile.1384096515" name="Parameter File" superClass="hc08.toolchain.linker.base.general.paramFile" value="${ProjDirPath}/Project_Settings/Linker_Files/Project.prm" valueType="string"/>
 								<inputType id="hc08.toolchain.linker.base.input.1897199125" name="Linker Input" superClass="hc08.toolchain.linker.base.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
@@ -36,7 +36,7 @@
 							</tool>
 							<tool errorParsers="" id="hc08.toolchain.burner.274124861" name="S08 Burner" superClass="hc08.toolchain.burner"/>
 							<tool errorParsers="" id="hcs08.toolchain.compiler.2070389747" name="HCS08 Compiler" superClass="hcs08.toolchain.compiler">
-								<option id="hsc08.toolchain.compiler.base.input.i.263841552" superClass="hsc08.toolchain.compiler.base.input.i" valueType="includePath">
+								<option id="hsc08.toolchain.compiler.base.input.i.263841552" name="Include File Path (-I)" superClass="hsc08.toolchain.compiler.base.input.i" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/Project_Headers&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${MCUToolsBaseDir}/lib/hc08c/device/src&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${MCUToolsBaseDir}/lib/hc08c/lib&quot;"/>
@@ -49,10 +49,10 @@
 								<inputType id="hcs08.toolchain.compiler.base.input.cpp.1275124947" name="HCS08 Compiler CPP Input" superClass="hcs08.toolchain.compiler.base.input.cpp"/>
 							</tool>
 							<tool errorParsers="" id="hc08.toolchain.assembler.1777641392" name="HCS08 Assembler" superClass="hc08.toolchain.assembler">
-								<option id="hc08.toolchain.assembler.base.include.dirs.1940637176" superClass="hc08.toolchain.assembler.base.include.dirs" valueType="includePath">
+								<option id="hc08.toolchain.assembler.base.include.dirs.1940637176" name="Include file search paths (-I)" superClass="hc08.toolchain.assembler.base.include.dirs" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/Project_Headers&quot;"/>
 								</option>
-								<option id="hc08.toolchain.asm.base.codegen.asmdbg.521004254" superClass="hc08.toolchain.asm.base.codegen.asmdbg" value="true" valueType="boolean"/>
+								<option id="hc08.toolchain.asm.base.codegen.asmdbg.521004254" name="Associate debug information to assembly source file (-AsmDbg)" superClass="hc08.toolchain.asm.base.codegen.asmdbg" value="true" valueType="boolean"/>
 								<inputType id="hc08.toolchain.assembler.base.input.931392879" name="HC08 Assembler Input" superClass="hc08.toolchain.assembler.base.input"/>
 							</tool>
 							<tool errorParsers="" id="hc08.toolchain.preprocessor.1359255166" name="HCS08 Preprocessor" superClass="hc08.toolchain.preprocessor"/>
