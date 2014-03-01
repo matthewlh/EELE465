@@ -778,7 +778,7 @@ lcd_init:
 			ORA		#$03
 			STA		PTADD			
 						
-;*** wait for 15 ms
+;*** wait for 20 ms
 			; load address of SUB_delay_cnt
 			LDHX #SUB_delay_cnt
 			
@@ -798,7 +798,7 @@ lcd_init:
 			LDA		#$03
 			JSR		lcd_write
 			
-;*** Wait for 4.1 ms
+;*** Wait for 20 ms
 			; load address of SUB_delay_cnt
 			LDHX #SUB_delay_cnt
 			
@@ -818,7 +818,7 @@ lcd_init:
 			LDA		#$03
 			JSR		lcd_write
 			
-;*** Wait for 100 us
+;*** Wait for 20 ms
 			; load address of SUB_delay_cnt
 			LDHX #SUB_delay_cnt
 			
@@ -862,7 +862,7 @@ lcd_init:
 			LDA		#$00
 			JSR		lcd_write
 			
-;*** Wait for 5 ms
+;*** Wait for 20 ms
 			; load address of SUB_delay_cnt
 			LDHX #SUB_delay_cnt
 			
@@ -882,7 +882,7 @@ lcd_init:
 			LDA		#$01
 			JSR		lcd_write
 			
-;*** Wait for 5 ms
+;*** Wait for 20 ms
 			; load address of SUB_delay_cnt
 			LDHX #SUB_delay_cnt
 			
