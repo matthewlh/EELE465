@@ -1,9 +1,11 @@
 ;************************************************************** 
 ;* Program Name: Lab#02 - LCD and Keypad
 ;* Author Names: Matthew Handley 
-;* Date: 2014-02-11
-;* Description: 
-;*
+;* Date: 2014-02-27
+;* Description: Takes input from the keypad and displays it on
+;*				the first line of the LCD. When the line is 
+;*				full, it is cleared before writing the next
+;*				character.
 ;* 
 ;**************************************************************
 
@@ -88,10 +90,7 @@ _Startup:
             
 			CLI			; enable interrupts
 			
-			
-
-mainLoop:
-			
+mainLoop:			
            	; read keypad			
            	JSR		scan_keypad
            	
@@ -99,9 +98,7 @@ mainLoop:
            	JSR		interpret_keypad           	           	
            	
            	; Display led_data on leds	
-			JSR		led_write			
-           	
-           	NOP
+			JSR		led_write
            	
             feed_watchdog
             BRA    	mainLoop
@@ -117,7 +114,6 @@ mainLoop:
 ;* Exit Variables: None 
 ;**************************************************************
 _Vtpmovf:      
-            
 			; Toggle Heartbeat LED			
 			LDA		led_data			; load current LED pattern
 			EOR		#$80				; toggle bit 7
@@ -128,21 +124,18 @@ _Vtpmovf:
 			AND		#$4E				; clear CH0F bit, but leav others alone
 			STA		TPMSC				; write back register
 			
-
 ;*** done ***
 
 			;Return from Interrupt
 			RTI
 			
-			
 ;**************************************************************
-
 
 
 ;************************************************************** 
 ;* Subroutine Name: led_write 
 ;* Description: Writes the 8 bits of led_data two the 8 LEDs
-;* 				on the DFFs at address 0 and 1 on the bus
+;* 				on the DFFs at address 0 and 1 on the bus.
 ;* 
 ;* Registers Modified: None
 ;* Entry Variables: led_data
@@ -184,8 +177,8 @@ led_write:
 			PULA			
 			RTS
 
-
 ;**************************************************************
+
 
 ;************************************************************** 
 ;* Subroutine Name: bus_read 
@@ -433,7 +426,8 @@ scan_keypad:
 
 ;************************************************************** 
 ;* Subroutine Name: interpret_keypad  
-;* Description: Interpres the data from the keypad.
+;* Description: Interpres the data from the keypad and writes
+;*				to the LCD and led_data based on keypad input.
 ;* 
 ;* Registers Modified: None
 ;* Entry Variables: None
@@ -470,7 +464,6 @@ interpret_keypad_1:
 			AND		#$F0
 			ORA		#$01
 			STA		led_data
-
 
 interpret_keypad_2:
 
@@ -564,7 +557,6 @@ interpret_keypad_5:
 			ORA		#$05
 			STA		led_data
 
-
 interpret_keypad_6:
 
 			; was '6' pressed ?
@@ -581,7 +573,6 @@ interpret_keypad_6:
 			AND		#$F0
 			ORA		#$06
 			STA		led_data
-
 
 interpret_keypad_B:
 
@@ -601,7 +592,6 @@ interpret_keypad_B:
 			STA		led_data
 
 
-
 interpret_keypad_lower_rows:
 ;*** was a key pressed in the second 2 rows ? ***
 
@@ -612,7 +602,6 @@ interpret_keypad_lower_rows:
 			
 			; key was pressed
 			STA		keypad_data_cmp
-
 
 interpret_keypad_7:
 
@@ -631,7 +620,6 @@ interpret_keypad_7:
 			ORA		#$07
 			STA		led_data
 
-
 interpret_keypad_8:
 
 			; was '8' pressed ?
@@ -648,7 +636,6 @@ interpret_keypad_8:
 			AND		#$F0
 			ORA		#$08
 			STA		led_data
-
 
 interpret_keypad_9:
 
@@ -667,7 +654,6 @@ interpret_keypad_9:
 			ORA		#$09
 			STA		led_data
 
-
 interpret_keypad_C:
 
 			; was 'C' pressed ?
@@ -685,7 +671,7 @@ interpret_keypad_C:
 			ORA		#$0C
 			STA		led_data		
 			
-			
+		
 			BRA 	interpret_keypad_E
 interpret_keypad_done_jump:
 			BRA		interpret_keypad_done
@@ -763,7 +749,6 @@ interpret_keypad_D:
 			STA		led_data
 
 			
-
 interpret_keypad_done:
 ;*** done ***
             
@@ -774,6 +759,7 @@ interpret_keypad_done:
 			RTS
 
 ;**************************************************************
+
 
 ;************************************************************** 
 ;* Subroutine Name: lcd_init  
@@ -807,7 +793,6 @@ lcd_init:
 			; jump to the delay loop
 			JSR		SUB_delay
 
-
 ;*** Send Init Command	
 
 			LDA		#$03
@@ -828,13 +813,11 @@ lcd_init:
 			; jump to the delay loop
 			JSR		SUB_delay
 
-
 ;*** Send Init command
 			
 			LDA		#$03
 			JSR		lcd_write
 			
-
 ;*** Wait for 100 us
 			; load address of SUB_delay_cnt
 			LDHX #SUB_delay_cnt
@@ -849,7 +832,6 @@ lcd_init:
 			
 			; jump to the delay loop
 			JSR		SUB_delay
-
 
 ;*** Send Init command
 
@@ -866,7 +848,6 @@ lcd_init:
 
 			LDA		#$08
 			JSR		lcd_write ; goes blank here
-
 
 ;*** Send display ctrl command
 
@@ -916,7 +897,6 @@ lcd_init:
 			; jump to the delay loop
 			JSR		SUB_delay
 
-
 ;*** Send entry mode command
 
 			LDA		#$00
@@ -934,6 +914,7 @@ lcd_init:
 			RTS
 
 ;**************************************************************
+
 
 ;************************************************************** 
 ;* Subroutine Name: lcd_write 
@@ -1037,7 +1018,6 @@ lcd_char:
 			LDA		#$00
 			STA		lcd_col_idx
 
-
 lcd_char_write_Char:
 
 			; write upper nibble
@@ -1061,9 +1041,7 @@ lcd_char_write_Char:
 			; done
 			RTS
 
-
 ;**************************************************************
-
 
 
 ;************************************************************** 
