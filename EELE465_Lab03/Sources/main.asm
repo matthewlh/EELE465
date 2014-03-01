@@ -2,7 +2,7 @@
 ;* Program Name: Lab#03 - ADC
 ;* Author Names: Matthew Handley 
 ;* Date: 2014-02-25
-;* Description: 
+;* Description: Does stuff.
 ;*
 ;* 
 ;**************************************************************
