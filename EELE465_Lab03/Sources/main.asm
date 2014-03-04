@@ -26,6 +26,7 @@ ADCS1_CH26		EQU %00011010	;ADCS1 configured for CH26 (internal temp. sensor)
             
             XREF __SEG_END_SSTACK   ; symbol defined by the linker for the end of the stack
             XREF bus_read, bus_write
+            XREF led_write, led_data
             ;XREF LCD_ASM
             ;XREF ADC_ASM
 
@@ -48,8 +49,6 @@ MY_ZEROPAGE: SECTION  SHORT
 			
 			keypad_data_cmp:	DS.B	1	; tempory holder for keypad data comparison in keypad_interpret
 			
-			
-			led_data:		DS.B	1	; 8 bit value for the 8 LEDs
 			
 			adc_data_0:		DS.B	1	; upper 8 bits from ADC read
 			adc_data_1:		DS.B	1	; lower 8 bits from ADC read  
@@ -283,54 +282,6 @@ write_to_lcd:
 			RTI
 			
 			
-;**************************************************************
-
-;************************************************************** 
-;* Subroutine Name: led_write 
-;* Description: Writes the 8 bits of led_data two the 8 LEDs
-;* 				on the DFFs at address 0 and 1 on the bus
-;* 
-;* Registers Modified: None
-;* Entry Variables: led_data
-;* Exit Variables: None
-;**************************************************************
-led_write:
-			; preserve accumulator A
-			PSHA
-
-;*** write lower nibble LEDs ***
-			; set the address
-            LDA 	#$00
-            STA		bus_addr
-            
-            ; set the data
-            LDA 	led_data
-            AND		#$0F
-            STA		bus_data
-            
-            ; write the data
-            JSR		bus_write
-
-;*** write upper nibble LEDs ***
-			; set the address
-            LDA 	#$01
-            STA		bus_addr
-            
-            ; set the data
-            LDA 	led_data
-            NSA
-            AND		#$0F
-            STA		bus_data
-            
-            ; write the data
-            JSR		bus_write
-			
-;*** done ***
-			; restore accumulator A
-			PULA			
-			RTS
-
-
 ;**************************************************************
 
 

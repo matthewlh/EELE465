@@ -3,4 +3,5 @@
 -ViewHidden
 -WmsgFob"%f%e:%l:%k:%d %m\n" 
 -Add("$(ProjDirPath)/FLASH/Sources/bus_asm.obj"
+"$(ProjDirPath)/FLASH/Sources/led_asm.obj"
 "$(ProjDirPath)/FLASH/Sources/main_asm.obj" )

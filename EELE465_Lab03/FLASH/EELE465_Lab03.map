@@ -13,6 +13,7 @@ Linker      : SmartLinker V-5.0.50 Build 13184, Jul  4 2013
 FILE SECTION
 ---------------------------------------------------------------------------------------------
 bus_asm.obj                             Model: SMALL,         Lang: Assembler
+led_asm.obj                             Model: SMALL,         Lang: Assembler
 main_asm.obj                            Model: SMALL,         Lang: Assembler
 
 *********************************************************************************************
@@ -24,22 +25,22 @@ Entry point: 0xE000 (_Startup)
 SECTION-ALLOCATION SECTION
 Section Name                    Size  Type     From       To       Segment
 ---------------------------------------------------------------------------------------------
-.init                           1012     R     0xE000     0xE3F3   ROM
+.init                           1015     R     0xE000     0xE3F6   ROM
 MY_ZEROPAGE                       18   R/W       0x60       0x71   Z_RAM
-MyCode                            48     R     0xE3F4     0xE423   ROM
+MyCode                            84     R     0xE3F7     0xE44A   ROM
 .stack                            64   R/W      0x100      0x13F   RAM
 .vectSeg0_vect                     2     R     0xFFF0     0xFFF1   .vectSeg0
 .vectSeg1_vect                     2     R     0xFFFE     0xFFFF   .vectSeg1
 
 Summary of section sizes per section type:
-READ_ONLY (R):         428 (dec:     1064)
+READ_ONLY (R):         44F (dec:     1103)
 READ_WRITE (R/W):       52 (dec:       82)
 
 *********************************************************************************************
 VECTOR-ALLOCATION SECTION
     Address     InitValue   InitFunction
 ---------------------------------------------------------------------------------------------
-     0xFFF0        0xE04D   _Vtpmovf
+     0xFFF0        0xE04C   _Vtpmovf
      0xFFFE        0xE000   _Startup
 
 *********************************************************************************************
@@ -48,62 +49,64 @@ OBJECT-ALLOCATION SECTION
 ---------------------------------------------------------------------------------------------
 MODULE:                 -- bus_asm.obj --
 - PROCEDURES:
-     bus_read                                  E3F4      1A      26       4   MyCode      
-     bus_write                                 E40E      16      22       7   MyCode      
+     bus_read                                  E3F7      1A      26       4   MyCode      
+     bus_write                                 E411      16      22       7   MyCode      
 - VARIABLES:
-     bus_addr                                    60       1       1       2   MY_ZEROPAGE 
-     bus_data                                    61       1       1       2   MY_ZEROPAGE 
+     bus_addr                                    60       1       1       4   MY_ZEROPAGE 
+     bus_data                                    61       1       1       4   MY_ZEROPAGE 
+MODULE:                 -- led_asm.obj --
+- PROCEDURES:
+     led_write                                 E427      24      36       2   MyCode      
+- VARIABLES:
+     led_data                                    62       1       1      37   MY_ZEROPAGE 
 MODULE:                 -- main_asm.obj --
 - PROCEDURES:
-     _Startup                                  E000      34      52       0   .init       
+     _Startup                                  E000      35      53       0   .init       
      main                                      E000       0       0       0   .init       
-     mainLoop                                  E034      14      20       0   .init       
-     mainloop_end                              E048       5       5       0   .init       
-     _Vtpmovf                                  E04D      4D      77       0   .init       
-     write_to_lcd                              E09A      22      34       0   .init       
-     led_write                                 E0BC      1E      30       2   .init       
-     keypad_scan                               E0DA      75     117       1   .init       
-     keypad_interpret                          E14F      1E      30       1   .init       
-     keypad_interpret_2                        E16D      13      19       0   .init       
-     keypad_interpret_3                        E180      13      19       0   .init       
-     keypad_interpret_A                        E193      15      21       0   .init       
-     keypad_interpret_lower_rows_jump          E1A8       2       2       0   .init       
-     keypad_interpret_4                        E1AA      13      19       0   .init       
-     keypad_interpret_5                        E1BD      13      19       0   .init       
-     keypad_interpret_6                        E1D0      13      19       0   .init       
-     keypad_interpret_B                        E1E3      13      19       0   .init       
-     keypad_interpret_lower_rows               E1F6      1D      29       0   .init       
-     keypad_interpret_8                        E213      13      19       0   .init       
-     keypad_interpret_9                        E226      13      19       0   .init       
-     keypad_interpret_C                        E239      15      21       0   .init       
-     keypad_interpret_done_jump                E24E       2       2       0   .init       
-     keypad_interpret_E                        E250      13      19       0   .init       
-     keypad_interpret_0                        E263      13      19       0   .init       
-     keypad_interpret_F                        E276      13      19       0   .init       
-     keypad_interpret_D                        E289      13      19       0   .init       
-     keypad_interpret_done                     E29C       2       2       0   .init       
-     lcd_init                                  E29E      9A     154       1   .init       
-     lcd_write                                 E338      34      52      20   .init       
-     lcd_char                                  E36C      29      41      18   .init       
-     lcd_char_write_Char                       E395      2C      44       0   .init       
-     num_to_char                               E3C1       3       3       2   .init       
-     SUB_delay                                 E3C4       6       6       9   .init       
-     SUB_delay_loop_0                          E3CA       A      10       0   .init       
-     SUB_delay_loop_1                          E3D4       C      12       0   .init       
-     SUB_delay_loop_2                          E3E0      10      16       0   .init       
-     SUB_delay_done                            E3F0       4       4       0   .init       
+     mainLoop                                  E035      17      23       0   .init       
+     _Vtpmovf                                  E04C      4D      77       0   .init       
+     write_to_lcd                              E099      24      36       0   .init       
+     keypad_scan                               E0BD      75     117       1   .init       
+     keypad_interpret                          E132      20      32       1   .init       
+     keypad_interpret_2                        E152      15      21       0   .init       
+     keypad_interpret_3                        E167      15      21       0   .init       
+     keypad_interpret_A                        E17C      17      23       0   .init       
+     keypad_interpret_lower_rows_jump          E193       2       2       0   .init       
+     keypad_interpret_4                        E195      15      21       0   .init       
+     keypad_interpret_5                        E1AA      15      21       0   .init       
+     keypad_interpret_6                        E1BF      15      21       0   .init       
+     keypad_interpret_B                        E1D4      15      21       0   .init       
+     keypad_interpret_lower_rows               E1E9      1F      31       0   .init       
+     keypad_interpret_8                        E208      15      21       0   .init       
+     keypad_interpret_9                        E21D      15      21       0   .init       
+     keypad_interpret_C                        E232      17      23       0   .init       
+     keypad_interpret_done_jump                E249       2       2       0   .init       
+     keypad_interpret_E                        E24B      15      21       0   .init       
+     keypad_interpret_0                        E260      15      21       0   .init       
+     keypad_interpret_F                        E275      15      21       0   .init       
+     keypad_interpret_D                        E28A      15      21       0   .init       
+     keypad_interpret_done                     E29F       2       2       0   .init       
+     lcd_init                                  E2A1      9A     154       1   .init       
+     lcd_write                                 E33B      34      52      20   .init       
+     lcd_char                                  E36F      29      41      18   .init       
+     lcd_char_write_Char                       E398      2C      44       0   .init       
+     num_to_char                               E3C4       3       3       2   .init       
+     SUB_delay                                 E3C7       6       6       9   .init       
+     SUB_delay_loop_0                          E3CD       A      10       0   .init       
+     SUB_delay_loop_1                          E3D7       C      12       0   .init       
+     SUB_delay_loop_2                          E3E3      10      16       0   .init       
+     SUB_delay_done                            E3F3       4       4       0   .init       
 - VARIABLES:
-     bus_addr                                    62       1       1      11   MY_ZEROPAGE 
-     bus_data                                    63       1       1      11   MY_ZEROPAGE 
-     lcd_data                                    64       1       1       3   MY_ZEROPAGE 
-     lcd_char_data                               65       1       1       3   MY_ZEROPAGE 
-     lcd_col_idx                                 66       1       1       6   MY_ZEROPAGE 
-     keypad_data_0                               67       1       1       5   MY_ZEROPAGE 
-     keypad_data_1                               68       1       1       5   MY_ZEROPAGE 
-     keypad_data_0_old                           69       1       1       2   MY_ZEROPAGE 
-     keypad_data_1_old                           6A       1       1       2   MY_ZEROPAGE 
-     keypad_data_cmp                             6B       1       1      18   MY_ZEROPAGE 
-     led_data                                    6C       1       1      37   MY_ZEROPAGE 
+     bus_addr                                    63       1       1       9   MY_ZEROPAGE 
+     bus_data                                    64       1       1       9   MY_ZEROPAGE 
+     lcd_data                                    65       1       1       3   MY_ZEROPAGE 
+     lcd_char_data                               66       1       1       3   MY_ZEROPAGE 
+     lcd_col_idx                                 67       1       1       6   MY_ZEROPAGE 
+     keypad_data_0                               68       1       1       5   MY_ZEROPAGE 
+     keypad_data_1                               69       1       1       5   MY_ZEROPAGE 
+     keypad_data_0_old                           6A       1       1       2   MY_ZEROPAGE 
+     keypad_data_1_old                           6B       1       1       2   MY_ZEROPAGE 
+     keypad_data_cmp                             6C       1       1      18   MY_ZEROPAGE 
      adc_data_0                                  6D       1       1       5   MY_ZEROPAGE 
      adc_data_1                                  6E       1       1       2   MY_ZEROPAGE 
      SUB_delay_cnt                               6F       3       3      10   MY_ZEROPAGE 
@@ -115,89 +118,88 @@ MODULE STATISTIC
   Name                                      Data   Code  Const
 ---------------------------------------------------------------------------------------------
   bus_asm.obj                                  2     48      0
-  main_asm.obj                                16   1012      0
+  led_asm.obj                                  1     36      0
+  main_asm.obj                                15   1015      0
   other                                       64      4      0
 
 *********************************************************************************************
 SECTION USE IN OBJECT-ALLOCATION SECTION
 ---------------------------------------------------------------------------------------------
 SECTION: ".init"
-  main _Startup mainLoop mainloop_end _Vtpmovf write_to_lcd led_write 
-  keypad_scan keypad_interpret keypad_interpret_2 keypad_interpret_3 
-  keypad_interpret_A keypad_interpret_lower_rows_jump keypad_interpret_4 
-  keypad_interpret_5 keypad_interpret_6 keypad_interpret_B 
-  keypad_interpret_lower_rows keypad_interpret_8 keypad_interpret_9 
-  keypad_interpret_C keypad_interpret_done_jump keypad_interpret_E 
-  keypad_interpret_0 keypad_interpret_F keypad_interpret_D 
-  keypad_interpret_done lcd_init lcd_write lcd_char lcd_char_write_Char 
-  num_to_char SUB_delay SUB_delay_loop_0 SUB_delay_loop_1 SUB_delay_loop_2 
-  SUB_delay_done 
+  main _Startup mainLoop _Vtpmovf write_to_lcd keypad_scan keypad_interpret 
+  keypad_interpret_2 keypad_interpret_3 keypad_interpret_A 
+  keypad_interpret_lower_rows_jump keypad_interpret_4 keypad_interpret_5 
+  keypad_interpret_6 keypad_interpret_B keypad_interpret_lower_rows 
+  keypad_interpret_8 keypad_interpret_9 keypad_interpret_C 
+  keypad_interpret_done_jump keypad_interpret_E keypad_interpret_0 
+  keypad_interpret_F keypad_interpret_D keypad_interpret_done lcd_init 
+  lcd_write lcd_char lcd_char_write_Char num_to_char SUB_delay SUB_delay_loop_0 
+  SUB_delay_loop_1 SUB_delay_loop_2 SUB_delay_done 
 SECTION: "MY_ZEROPAGE"
-  bus_addr bus_data bus_addr bus_data lcd_data lcd_char_data lcd_col_idx 
-  keypad_data_0 keypad_data_1 keypad_data_0_old keypad_data_1_old 
-  keypad_data_cmp led_data adc_data_0 adc_data_1 SUB_delay_cnt 
+  bus_addr bus_data led_data bus_addr bus_data lcd_data lcd_char_data 
+  lcd_col_idx keypad_data_0 keypad_data_1 keypad_data_0_old keypad_data_1_old 
+  keypad_data_cmp adc_data_0 adc_data_1 SUB_delay_cnt 
 SECTION: "MyCode"
-  bus_read bus_write 
+  bus_read bus_write led_write 
 
 *********************************************************************************************
 OBJECT LIST SORTED BY ADDRESS
      Name                                      Addr   hSize   dSize     Ref    Section   RLIB
 ---------------------------------------------------------------------------------------------
-     bus_addr                                    60       1       1       2   MY_ZEROPAGE 
-     bus_data                                    61       1       1       2   MY_ZEROPAGE 
-     bus_addr                                    62       1       1      11   MY_ZEROPAGE 
-     bus_data                                    63       1       1      11   MY_ZEROPAGE 
-     lcd_data                                    64       1       1       3   MY_ZEROPAGE 
-     lcd_char_data                               65       1       1       3   MY_ZEROPAGE 
-     lcd_col_idx                                 66       1       1       6   MY_ZEROPAGE 
-     keypad_data_0                               67       1       1       5   MY_ZEROPAGE 
-     keypad_data_1                               68       1       1       5   MY_ZEROPAGE 
-     keypad_data_0_old                           69       1       1       2   MY_ZEROPAGE 
-     keypad_data_1_old                           6A       1       1       2   MY_ZEROPAGE 
-     keypad_data_cmp                             6B       1       1      18   MY_ZEROPAGE 
-     led_data                                    6C       1       1      37   MY_ZEROPAGE 
+     bus_addr                                    60       1       1       4   MY_ZEROPAGE 
+     bus_data                                    61       1       1       4   MY_ZEROPAGE 
+     led_data                                    62       1       1      37   MY_ZEROPAGE 
+     bus_addr                                    63       1       1       9   MY_ZEROPAGE 
+     bus_data                                    64       1       1       9   MY_ZEROPAGE 
+     lcd_data                                    65       1       1       3   MY_ZEROPAGE 
+     lcd_char_data                               66       1       1       3   MY_ZEROPAGE 
+     lcd_col_idx                                 67       1       1       6   MY_ZEROPAGE 
+     keypad_data_0                               68       1       1       5   MY_ZEROPAGE 
+     keypad_data_1                               69       1       1       5   MY_ZEROPAGE 
+     keypad_data_0_old                           6A       1       1       2   MY_ZEROPAGE 
+     keypad_data_1_old                           6B       1       1       2   MY_ZEROPAGE 
+     keypad_data_cmp                             6C       1       1      18   MY_ZEROPAGE 
      adc_data_0                                  6D       1       1       5   MY_ZEROPAGE 
      adc_data_1                                  6E       1       1       2   MY_ZEROPAGE 
      SUB_delay_cnt                               6F       3       3      10   MY_ZEROPAGE 
      main                                      E000       0       0       0   .init       
-     _Startup                                  E000      34      52       0   .init       
-     mainLoop                                  E034      14      20       0   .init       
-     mainloop_end                              E048       5       5       0   .init       
-     _Vtpmovf                                  E04D      4D      77       0   .init       
-     write_to_lcd                              E09A      22      34       0   .init       
-     led_write                                 E0BC      1E      30       2   .init       
-     keypad_scan                               E0DA      75     117       1   .init       
-     keypad_interpret                          E14F      1E      30       1   .init       
-     keypad_interpret_2                        E16D      13      19       0   .init       
-     keypad_interpret_3                        E180      13      19       0   .init       
-     keypad_interpret_A                        E193      15      21       0   .init       
-     keypad_interpret_lower_rows_jump          E1A8       2       2       0   .init       
-     keypad_interpret_4                        E1AA      13      19       0   .init       
-     keypad_interpret_5                        E1BD      13      19       0   .init       
-     keypad_interpret_6                        E1D0      13      19       0   .init       
-     keypad_interpret_B                        E1E3      13      19       0   .init       
-     keypad_interpret_lower_rows               E1F6      1D      29       0   .init       
-     keypad_interpret_8                        E213      13      19       0   .init       
-     keypad_interpret_9                        E226      13      19       0   .init       
-     keypad_interpret_C                        E239      15      21       0   .init       
-     keypad_interpret_done_jump                E24E       2       2       0   .init       
-     keypad_interpret_E                        E250      13      19       0   .init       
-     keypad_interpret_0                        E263      13      19       0   .init       
-     keypad_interpret_F                        E276      13      19       0   .init       
-     keypad_interpret_D                        E289      13      19       0   .init       
-     keypad_interpret_done                     E29C       2       2       0   .init       
-     lcd_init                                  E29E      9A     154       1   .init       
-     lcd_write                                 E338      34      52      20   .init       
-     lcd_char                                  E36C      29      41      18   .init       
-     lcd_char_write_Char                       E395      2C      44       0   .init       
-     num_to_char                               E3C1       3       3       2   .init       
-     SUB_delay                                 E3C4       6       6       9   .init       
-     SUB_delay_loop_0                          E3CA       A      10       0   .init       
-     SUB_delay_loop_1                          E3D4       C      12       0   .init       
-     SUB_delay_loop_2                          E3E0      10      16       0   .init       
-     SUB_delay_done                            E3F0       4       4       0   .init       
-     bus_read                                  E3F4      1A      26       4   MyCode      
-     bus_write                                 E40E      16      22       7   MyCode      
+     _Startup                                  E000      35      53       0   .init       
+     mainLoop                                  E035      17      23       0   .init       
+     _Vtpmovf                                  E04C      4D      77       0   .init       
+     write_to_lcd                              E099      24      36       0   .init       
+     keypad_scan                               E0BD      75     117       1   .init       
+     keypad_interpret                          E132      20      32       1   .init       
+     keypad_interpret_2                        E152      15      21       0   .init       
+     keypad_interpret_3                        E167      15      21       0   .init       
+     keypad_interpret_A                        E17C      17      23       0   .init       
+     keypad_interpret_lower_rows_jump          E193       2       2       0   .init       
+     keypad_interpret_4                        E195      15      21       0   .init       
+     keypad_interpret_5                        E1AA      15      21       0   .init       
+     keypad_interpret_6                        E1BF      15      21       0   .init       
+     keypad_interpret_B                        E1D4      15      21       0   .init       
+     keypad_interpret_lower_rows               E1E9      1F      31       0   .init       
+     keypad_interpret_8                        E208      15      21       0   .init       
+     keypad_interpret_9                        E21D      15      21       0   .init       
+     keypad_interpret_C                        E232      17      23       0   .init       
+     keypad_interpret_done_jump                E249       2       2       0   .init       
+     keypad_interpret_E                        E24B      15      21       0   .init       
+     keypad_interpret_0                        E260      15      21       0   .init       
+     keypad_interpret_F                        E275      15      21       0   .init       
+     keypad_interpret_D                        E28A      15      21       0   .init       
+     keypad_interpret_done                     E29F       2       2       0   .init       
+     lcd_init                                  E2A1      9A     154       1   .init       
+     lcd_write                                 E33B      34      52      20   .init       
+     lcd_char                                  E36F      29      41      18   .init       
+     lcd_char_write_Char                       E398      2C      44       0   .init       
+     num_to_char                               E3C4       3       3       2   .init       
+     SUB_delay                                 E3C7       6       6       9   .init       
+     SUB_delay_loop_0                          E3CD       A      10       0   .init       
+     SUB_delay_loop_1                          E3D7       C      12       0   .init       
+     SUB_delay_loop_2                          E3E3      10      16       0   .init       
+     SUB_delay_done                            E3F3       4       4       0   .init       
+     bus_read                                  E3F7      1A      26       4   MyCode      
+     bus_write                                 E411      16      22       7   MyCode      
+     led_write                                 E427      24      36       2   MyCode      
 
 *********************************************************************************************
 UNUSED-OBJECTS SECTION
@@ -215,7 +217,6 @@ mainLoop                  USES led_write keypad_scan keypad_interpret
 _Vtpmovf                  USES lcd_write SUB_delay_cnt SUB_delay lcd_col_idx 
                                 adc_data_0 adc_data_1 
 write_to_lcd              USES num_to_char lcd_char led_data 
-led_write                 USES bus_addr led_data bus_data bus_write 
 keypad_scan               USES keypad_data_0 keypad_data_0_old keypad_data_1 
                                 keypad_data_1_old bus_addr bus_data bus_write bus_read 
 keypad_interpret          USES keypad_data_0_old keypad_data_0 keypad_data_cmp 
@@ -246,6 +247,7 @@ lcd_char_write_Char       USES lcd_char_data lcd_write SUB_delay_cnt SUB_delay
 SUB_delay                 USES SUB_delay_cnt 
 bus_read                  USES bus_addr bus_data 
 bus_write                 USES bus_data bus_addr 
+led_write                 USES bus_addr led_data bus_data bus_write 
 
 *********************************************************************************************
 DEPENDENCY TREE
@@ -278,6 +280,6 @@ STATISTIC SECTION
 
 ExeFile:
 --------
-Number of blocks to be downloaded: 3
-Total size of all blocks to be downloaded: 1064
+Number of blocks to be downloaded: 4
+Total size of all blocks to be downloaded: 1103
 
