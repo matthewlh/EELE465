@@ -1,8 +1,9 @@
 ;************************************************************** 
-;* File Name: bus.asm
-;* Author Names: Matthew Handley 
-;* Date: 2014-03-04
-;* Description: Contains subroutines for controlling the bus.
+;* File Name    : 	led.asm
+;* Author Names : 	Matthew Handley 
+;* Date         : 	2014-03-04
+;* Description  : 	Contains subroutines for controlling the
+;*					DFF-driven LEDs.
 ;*
 ;**************************************************************
 
