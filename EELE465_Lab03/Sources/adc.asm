@@ -31,7 +31,8 @@ MY_ZEROPAGE: SECTION  SHORT
 			adc_data_0:			DS.B	1	; upper 8 bits from ADC read
 			adc_data_1:			DS.B	1	; lower 8 bits from ADC read  
 			
-			adc_num_samples:	DS.B	1	; number of samples to take and average together
+			adc_num_samples:			DS.B	1	; number of samples to take and average together
+			adc_num_samples_remaining:	DS.B	1	; number of samples to be taken
 			
 ; code section
 MyCode:     SECTION
@@ -128,9 +129,44 @@ adc_read_ch2_avg:
 ;* Exit Variables: Accu A - ADC counts averaged
 ;**************************************************************
 adc_read_avg: 
-			
-			
-adc_read_avg_loop:
+			; clear adc_data
+			LDA		#$00
+			STA		adc_data_0
+			STA		adc_data_1
 
+			; load Accu A for loop counter 
+			LDA		adc_num_samples
+			
+adc_read_avg_loop_measure:
+
+			; start ADC conversion
+			
+			
+adc_read_avg_loop_conversion:
+
+			; CoCo flag set?
+			
+			
+			; add the sample to adc_data
+			
+			
+			; decrement adc_num_samples_remaining
+			LDA 	adc_num_samples_remaining
+			DECA
+			STA		adc_num_samples_remaining
+			
+			; more samples remaining ?
+			BNE		adc_read_avg_loop_measure
+			
+			; no more samples, so averge what we have
+			
+			; will not work, cause result may be greater than 8 bits of Accu A
+			LDHX	adc_data_0
+			LDA		adc_data_1
+			LDX		adc_num_samples
+			DIV						; A <= (H:A)/(X)
+				
 
 ;************************************************************** 
+
+
