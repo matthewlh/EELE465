@@ -18,7 +18,7 @@ ADCS1_CH26		EQU %00011010	;ADCS1 configured for CH26 (internal temp. sensor)
             
 
 ; export symbols
-            XDEF _Startup, main, _Vtpmovf, bus_write, bus_read, scan_keypad, led_write, lcd_init, SUB_delay
+            XDEF _Startup, main, _Vtpmovf, bus_write, bus_read, keypad_scan, led_write, lcd_init, SUB_delay
             ; we export both '_Startup' and 'main' as symbols. Either can
             ; be referenced in the linker .prm file or from C/C++ later on
             
@@ -42,7 +42,7 @@ MY_ZEROPAGE: SECTION  SHORT
 			keypad_data_0_old:	DS.B	1	; bit flags representing which keys were pressed on the keypad, the last time it was scanned
 			keypad_data_1_old:	DS.B	1
 			
-			keypad_data_cmp:	DS.B	1	; tempory holder for keypad data comparison in interpret_keypad
+			keypad_data_cmp:	DS.B	1	; tempory holder for keypad data comparison in keypad_interpret
 			
 			
 			led_data:		DS.B	1	; 8 bit value for the 8 LEDs
@@ -106,17 +106,55 @@ _Startup:
 			
 
 mainLoop:
+;*** rest to start
+			; clear vars 
 			
-           	; read keypad			
-           	;JSR		scan_keypad
-           	
-           	; interpret keypad data
-           	;JSR		interpret_keypad           	           	
-           	
-           	; Display led_data on leds	
-			;JSR		led_write
 			
-			NOP
+			; clear display
+			
+
+;*** prompt user for input
+			
+			
+;*** wait for user response, n
+mainloop_prompt:
+
+           	; Update heartheat LED while we wait	
+			JSR		led_write
+			
+			; feed watchdog while we wait
+            feed_watchdog
+			
+			; scan keypad
+           	JSR		keypad_scan
+			
+			; check for button press
+			JSR		keypad_interpret
+			
+			; if no button press, repeat
+			
+			
+;*** while n != 0
+mainloop_read:			
+
+           	; Update heartheat LED while we wait	
+			JSR		led_write
+			
+			; feed watchdog while we wait
+            feed_watchdog
+
+			; read external temp sensor
+				
+
+			; read internal temp sensor			
+			
+			
+			; repeat if n != 0
+			
+;*** do math internal temp data
+
+			
+;*** do math internal temp data
            	
             feed_watchdog
             BRA    	mainLoop
@@ -368,7 +406,7 @@ bus_write:
 
 
 ;************************************************************** 
-;* Subroutine Name: scan_keypad 
+;* Subroutine Name: keypad_scan 
 ;* Description: Scans the greyhill 4x4 keypad, and saves the 
 ;*				result to variable.
 ;*				Note that this method will overwrite values in 
@@ -378,7 +416,7 @@ bus_write:
 ;* Entry Variables: None
 ;* Exit Variables: keypad_data_0, keypad_data_1
 ;**************************************************************
-scan_keypad:
+keypad_scan:
 			; preserve registers
 			PSHA
 			
@@ -526,20 +564,20 @@ scan_keypad:
 			; restore registers
 			PULA
 			
-			; return from subroutine scan_keypad
+			; return from subroutine keypad_scan
 			RTS
 
 ;**************************************************************
 
 ;************************************************************** 
-;* Subroutine Name: interpret_keypad  
+;* Subroutine Name: keypad_interpret  
 ;* Description: Interpres the data from the keypad.
 ;* 
 ;* Registers Modified: None
 ;* Entry Variables: None
 ;* Exit Variables: None
 ;**************************************************************
-interpret_keypad:
+keypad_interpret:
 
 			; preserve registers
 			PSHA
@@ -549,17 +587,17 @@ interpret_keypad:
 			LDA		keypad_data_0_old
 			COMA	
 			AND		keypad_data_0
-			CBEQA	#$00, interpret_keypad_lower_rows_jump
+			CBEQA	#$00, keypad_interpret_lower_rows_jump
 			
 			; key was pressed
 			STA		keypad_data_cmp
 
-interpret_keypad_1:
+keypad_interpret_1:
 
 			; was '1' pressed ?
 			LDA		keypad_data_cmp
 			AND		#%11111110
-			BNE		interpret_keypad_2
+			BNE		keypad_interpret_2
 
 			; write a '1' to the LCD
 			LDA		#'1'
@@ -572,12 +610,12 @@ interpret_keypad_1:
 			STA		led_data
 
 
-interpret_keypad_2:
+keypad_interpret_2:
 
 			; was '2' pressed ?
 			LDA		keypad_data_cmp
 			AND		#%11111101
-			BNE		interpret_keypad_3
+			BNE		keypad_interpret_3
 
 			; write a '2' to the LCD
 			LDA		#'2'
@@ -589,12 +627,12 @@ interpret_keypad_2:
 			ORA		#$02
 			STA		led_data
 
-interpret_keypad_3:
+keypad_interpret_3:
 
 			; was '3' pressed ?
 			LDA		keypad_data_cmp
 			AND		#%11111011
-			BNE		interpret_keypad_A
+			BNE		keypad_interpret_A
 
 			; write a '3' to the LCD
 			LDA		#'3'
@@ -607,12 +645,12 @@ interpret_keypad_3:
 			STA		led_data
 
 
-interpret_keypad_A:
+keypad_interpret_A:
 
 			; was 'A' pressed ?
 			LDA		keypad_data_cmp
 			AND		#%11110111
-			BNE		interpret_keypad_4
+			BNE		keypad_interpret_4
 
 			; write a 'A' to the LCD
 			LDA		#'A'
@@ -624,17 +662,17 @@ interpret_keypad_A:
 			ORA		#$0A
 			STA		led_data
 			
-			BRA		interpret_keypad_4
-interpret_keypad_lower_rows_jump:
-			BRA		interpret_keypad_lower_rows
+			BRA		keypad_interpret_4
+keypad_interpret_lower_rows_jump:
+			BRA		keypad_interpret_lower_rows
 
 
-interpret_keypad_4:
+keypad_interpret_4:
 
 			; was '4' pressed ?
 			LDA		keypad_data_cmp
 			AND		#%11101111
-			BNE		interpret_keypad_5
+			BNE		keypad_interpret_5
 
 			; write a '4' to the LCD
 			LDA		#'4'
@@ -647,12 +685,12 @@ interpret_keypad_4:
 			STA		led_data
 
 
-interpret_keypad_5:
+keypad_interpret_5:
 
 			; was '5' pressed ?
 			LDA		keypad_data_cmp
 			AND		#%11011111
-			BNE		interpret_keypad_6
+			BNE		keypad_interpret_6
 
 			; write a '5' to the LCD
 			LDA		#'5'
@@ -665,12 +703,12 @@ interpret_keypad_5:
 			STA		led_data
 
 
-interpret_keypad_6:
+keypad_interpret_6:
 
 			; was '6' pressed ?
 			LDA		keypad_data_cmp
 			AND		#%10111111
-			BNE		interpret_keypad_B
+			BNE		keypad_interpret_B
 
 			; write a '6' to the LCD
 			LDA		#'6'
@@ -683,12 +721,12 @@ interpret_keypad_6:
 			STA		led_data
 
 
-interpret_keypad_B:
+keypad_interpret_B:
 
 			; was 'B' pressed ?
 			LDA		keypad_data_cmp
 			AND		#%01111111
-			BNE		interpret_keypad_lower_rows
+			BNE		keypad_interpret_lower_rows
 
 			; write a 'B' to the LCD
 			LDA		#'B'
@@ -702,24 +740,24 @@ interpret_keypad_B:
 
 
 
-interpret_keypad_lower_rows:
+keypad_interpret_lower_rows:
 ;*** was a key pressed in the second 2 rows ? ***
 
 			LDA		keypad_data_1_old
 			COMA	
 			AND		keypad_data_1
-			CBEQA	#$00, interpret_keypad_done_jump
+			CBEQA	#$00, keypad_interpret_done_jump
 			
 			; key was pressed
 			STA		keypad_data_cmp
 
 
-interpret_keypad_7:
+keypad_interpret_7:
 
 			; was '7' pressed ?
 			LDA		keypad_data_cmp
 			AND		#%11111110
-			BNE		interpret_keypad_8
+			BNE		keypad_interpret_8
 
 			; write a '7' to the LCD
 			LDA		#'7'
@@ -732,12 +770,12 @@ interpret_keypad_7:
 			STA		led_data
 
 
-interpret_keypad_8:
+keypad_interpret_8:
 
 			; was '8' pressed ?
 			LDA		keypad_data_cmp
 			AND		#%11111101
-			BNE		interpret_keypad_9
+			BNE		keypad_interpret_9
 
 			; write a '8' to the LCD
 			LDA		#'8'
@@ -750,12 +788,12 @@ interpret_keypad_8:
 			STA		led_data
 
 
-interpret_keypad_9:
+keypad_interpret_9:
 
 			; was '9' pressed ?
 			LDA		keypad_data_cmp
 			AND		#%11111011
-			BNE		interpret_keypad_C
+			BNE		keypad_interpret_C
 
 			; write a '9' to the LCD
 			LDA		#'9'
@@ -768,12 +806,12 @@ interpret_keypad_9:
 			STA		led_data
 
 
-interpret_keypad_C:
+keypad_interpret_C:
 
 			; was 'C' pressed ?
 			LDA		keypad_data_cmp
 			AND		#%11110111
-			BNE		interpret_keypad_E
+			BNE		keypad_interpret_E
 
 			; write a 'C' to the LCD
 			LDA		#'C'
@@ -786,17 +824,17 @@ interpret_keypad_C:
 			STA		led_data		
 			
 			
-			BRA 	interpret_keypad_E
-interpret_keypad_done_jump:
-			BRA		interpret_keypad_done
+			BRA 	keypad_interpret_E
+keypad_interpret_done_jump:
+			BRA		keypad_interpret_done
 
 
-interpret_keypad_E:
+keypad_interpret_E:
 
 			; was 'E'/'*' pressed ?
 			LDA		keypad_data_cmp
 			AND		#%11101111
-			BNE		interpret_keypad_0
+			BNE		keypad_interpret_0
 
 			; write a 'E' to the LCD
 			LDA		#'E'
@@ -809,12 +847,12 @@ interpret_keypad_E:
 			STA		led_data
 
 
-interpret_keypad_0:
+keypad_interpret_0:
 
 			; was '0' pressed ?
 			LDA		keypad_data_cmp
 			AND		#%11011111
-			BNE		interpret_keypad_F
+			BNE		keypad_interpret_F
 
 			; write a '0' to the LCD
 			LDA		#'0'
@@ -827,12 +865,12 @@ interpret_keypad_0:
 			STA		led_data
 
 
-interpret_keypad_F:
+keypad_interpret_F:
 
 			; was 'F'/'#' pressed ?
 			LDA		keypad_data_cmp
 			AND		#%10111111
-			BNE		interpret_keypad_D
+			BNE		keypad_interpret_D
 
 			; write a 'F' to the LCD
 			LDA		#'F'
@@ -845,12 +883,12 @@ interpret_keypad_F:
 			STA		led_data
 
 
-interpret_keypad_D:
+keypad_interpret_D:
 
 			; was 'D' pressed ?
 			LDA		keypad_data_cmp
 			AND		#%01111111
-			BNE		interpret_keypad_done
+			BNE		keypad_interpret_done
 
 			; write a 'D' to the LCD
 			LDA		#'D'
@@ -864,13 +902,13 @@ interpret_keypad_D:
 
 			
 
-interpret_keypad_done:
+keypad_interpret_done:
 ;*** done ***
             
 			; restore registers
 			PULA
 			
-			; return from subroutine scan_keypad
+			; return from subroutine keypad_scan
 			RTS
 
 ;**************************************************************
