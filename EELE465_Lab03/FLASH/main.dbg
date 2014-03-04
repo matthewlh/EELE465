@@ -7,13 +7,6 @@
 ;* 
 ;**************************************************************
 
-mDataBus		EQU	$F0		; Mask for the data bus pins on PortB
-mAddrBus		EQU	$0F		; Mask for the address bus pins on PortB
-
-ADCS1_CH2		EQU %00000010	;ADCS1 configured for CH2
-ADCS1_CH26		EQU %00011010	;ADCS1 configured for CH26 (internal temp. sensor) 
-
-
 ; Include derivative-specific definitions
             INCLUDE 'derivative.inc'
 ; Note: This file is recreated by the project wizard whenever the MCU is
@@ -1980,7 +1973,7 @@ feed_watchdog: MACRO
             
             
             XREF __SEG_END_SSTACK   ; symbol defined by the linker for the end of the stack
-            XREF bus_read, bus_write, bus_addr, bus_data
+            XREF bus_init, bus_read, bus_write, bus_addr, bus_data
             XREF led_write, led_data
             XREF keypad_interpret, keypad_scan, keypad_data_0, keypad_data_1
             XREF lcd_init, lcd_write, lcd_char, lcd_num_to_char, lcd_data, lcd_char_data, lcd_col_idx
@@ -2004,6 +1997,15 @@ main:
 _Startup:
             LDHX   #__SEG_END_SSTACK ; initialize the stack pointer
             TXS
+            
+            ; init bus
+            JSR		bus_init
+            
+            ;*** init LCD and RS, RW pins ***
+			JSR		lcd_init
+			
+			LDA		#$00
+			STA		lcd_col_idx	
 			
 			;*** init TPM module - for heartbeat LED ***
 			; TPMMODH:L Registers 
@@ -2013,34 +2015,14 @@ _Startup:
 			STA		TPMMODL
 			; TPMSC Register 
 			LDA 	#$4E					; TOIE clear, CLKS: Bus clock, Prescale: 128
-			STA		TPMSC
-			
-			;*** init Data & Address Busses ***
-			LDA		mAddrBus				; Set Address Bus pins as output by default, leave data as input
-			STA		PTBDD
-			LDA		$00						; Leave all of PortB as input at start 
-			STA		PTBD
-		
-			;*** init LCD and RS, RW pins ***
-			JSR		lcd_init
-			
-			LDA		#$00
-			STA		lcd_col_idx				
+			STA		TPMSC			
 			
 			;*** init led_data variable ***
 			LDA		#$00
 			STA		led_data
 			
-			;*** init ADC ***
-			LDA		#ADCS1_CH2		;AIEN=0, ADCO=0, ADCH=2
-			STA		ADCSC1
-			LDA		#$00			;ADTRG=0, ACFE=0, ACFGT=0
-			STA		ADCSC2
-			LDA		#%00001000		;ADLPC=0, ADIV=00, ADLSMP=0, MODE=10-bit, ADICLK=00
-			STA		ADCCFG
-			LDA		#$04			;ADPC2=1
-			STA		APCTL1
-			
+			; init ADC
+			JSR		adc_init
             
 			CLI			; enable interrupts
 			
@@ -2060,17 +2042,16 @@ mainLoop:
 mainloop_prompt:
 
            	; Update heartheat LED while we wait	
-			JSR		led_write
+			;JSR		led_write
 			
 			; feed watchdog while we wait
-            feed_watchdog
-            STA SRS              ; feed the watchdog
+            ;feed_watchdog
 			
 			; scan keypad
-           	JSR		keypad_scan
+           	;JSR		keypad_scan
 			
 			; check for button press
-			JSR		keypad_interpret
+			;JSR		keypad_interpret
 			
 			; if no button press, repeat
 			
@@ -2079,11 +2060,10 @@ mainloop_prompt:
 mainloop_read:			
 
            	; Update heartheat LED while we wait	
-			JSR		led_write
+			;JSR		led_write
 			
 			; feed watchdog while we wait
-            feed_watchdog
-            STA SRS              ; feed the watchdog
+            ;feed_watchdog
 
 			; read external temp sensor
 				
@@ -2123,6 +2103,7 @@ _Vtpmovf:
 			PSHX
 
 ;*** Write ADC value to LCD
+
 			; write to ADCS1 to trigger ADC measurement
 			LDA		ADCSC1
 			STA		ADCSC1	

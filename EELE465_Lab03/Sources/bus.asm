@@ -16,7 +16,7 @@ mAddrBus		EQU	$0F		; Mask for the address bus pins on PortB
             INCLUDE 'MC9S08QG8.inc'
             
 ; export symbols
-            XDEF bus_write, bus_read, bus_addr, bus_data
+            XDEF bus_init, bus_write, bus_read, bus_addr, bus_data
             
 ; import symbols
 			XREF _Startup, main, _Vtpmov  
@@ -30,6 +30,31 @@ MY_ZEROPAGE: SECTION  SHORT
 
 ; code section
 MyCode:     SECTION
+			
+;************************************************************** 
+;* Subroutine Name: bus_init 
+;* Description: Reads data from the device whose address is
+;*				the lower 3 bits of bus_addr, and store the
+;*				data to the lower 4 bits of bus_data.
+;* 
+;* Registers Modified: None
+;* Entry Variables: None
+;* Exit Variables: None
+;**************************************************************
+bus_init:
+			; preserve registers
+			PSHA
+			
+			;*** init Data & Address Busses ***
+			LDA		mAddrBus				; Set Address Bus pins as output by default, leave data as input
+			STA		PTBDD
+			LDA		$00						; Leave all of PortB as input at start 
+			STA		PTBD
+			
+			; restore registers
+			PULA
+
+;**************************************************************
 			
 ;************************************************************** 
 ;* Subroutine Name: bus_read 
