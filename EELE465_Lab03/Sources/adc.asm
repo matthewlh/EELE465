@@ -61,7 +61,10 @@ adc_init:
 			
 
 			; restore registers
-			PULA
+			PULA		
+			
+			; done
+			RTS
 			
 ;**************************************************************
 
@@ -120,13 +123,13 @@ adc_read_ch2_avg:
 
 ;************************************************************** 
 ;* Subroutine Name: adc_read_avg
-;* Description: Reads and averages whatever the current ADC 
+;* Description: Reads and sums whatever the current ADC 
 ;*				channel is.
 ;* 
 ;* Registers Modified: Accu A
 ;* Entry Variables: adc_num_samples - number of samples to 
-;*					take and average.
-;* Exit Variables: Accu A - ADC counts averaged
+;*					take and sum.
+;* Exit Variables: adc_data_0:adc_data_1 - sum of all samples
 ;**************************************************************
 adc_read_avg: 
 			; clear adc_data
@@ -137,18 +140,27 @@ adc_read_avg:
 			; load Accu A for loop counter 
 			LDA		adc_num_samples
 			
-adc_read_avg_loop_measure:
+adc_read_avg_measure:
 
 			; start ADC conversion
+			LDA		ADCSC1
+			STA		ADCSC1
 			
 			
 adc_read_avg_loop_conversion:
 
 			; CoCo flag set?
+			LDA		ADCSC1
+			AND		mADCSC1_COCO
+			BEQ		adc_read_avg_loop_conversion
 			
 			
 			; add the sample to adc_data
+			LDA		ADCRL
+			ADD		adc_data_0
 			
+			LDA		ADCRL
+			ADC		adc_data_1			
 			
 			; decrement adc_num_samples_remaining
 			LDA 	adc_num_samples_remaining
@@ -156,15 +168,10 @@ adc_read_avg_loop_conversion:
 			STA		adc_num_samples_remaining
 			
 			; more samples remaining ?
-			BNE		adc_read_avg_loop_measure
+			BNE		adc_read_avg_measure		
 			
-			; no more samples, so averge what we have
-			
-			; will not work, cause result may be greater than 8 bits of Accu A
-			LDHX	adc_data_0
-			LDA		adc_data_1
-			LDX		adc_num_samples
-			DIV						; A <= (H:A)/(X)
+			; done
+			RTS
 				
 
 ;************************************************************** 
