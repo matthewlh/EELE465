@@ -14,7 +14,7 @@
             INCLUDE 'MC9S08QG8.inc'
             
 ; export symbols
-            XDEF lcd_init, lcd_write, lcd_char, lcd_num_to_char 
+            XDEF lcd_init, lcd_write, lcd_char, lcd_str, lcd_num_to_char, lcd_clear, lcd_goto_row0, lcd_goto_row1 
             XDEF lcd_data, lcd_char_data, lcd_col_idx
             
 ; import symbols
@@ -28,6 +28,8 @@ MY_ZEROPAGE: SECTION  SHORT
 			lcd_data:		DS.B	1	; lower 4 bits = LCD data lines, bit 6 = RS, bit 5 = RW
 			lcd_char_data:	DS.B	1	; used by lcd_char subroutine to store a character
 			lcd_col_idx:	DS.B	1	; index of the column of the LCD that the cursor is currently in
+			
+			str_offset:		DS.B	1	; holds the offset into a string for lcd_str
 			
 ; code section
 MyCode:     SECTION
@@ -267,46 +269,6 @@ lcd_write:
 ;* Exit Variables:  
 ;**************************************************************
 lcd_char:
-			; preserve HX
-			PSHH
-			PSHX
-
-			; store input parameter			
-			STA		lcd_char_data
-
-			; lcd_col_idx < 17
-			LDA		lcd_col_idx
-			CMP		#$10
-			BNE		lcd_char_write_Char
-			
-			; lcd_col_idx >= 17, clear lcd
-			
-			; Send display clear command
-			LDA		#$00
-			JSR		lcd_write
-			LDA		#$01
-			JSR		lcd_write
-			
-			;*** Wait for 20 ms ***
-			LDHX #SUB_delay_cnt
-			
-			; configure loop delays: 0x001388 = 20 ms
-			LDA		#$00
-			STA		2,X
-			LDA		#$13
-			STA		1,X
-			LDA		#$88
-			STA		0,X
-			
-			; jump to the delay loop
-			JSR		SUB_delay
-			
-			;  reset lcd_col_idx
-			LDA		#$00
-			STA		lcd_col_idx
-
-
-lcd_char_write_Char:
 
 			; write upper nibble
 			LDA		lcd_char_data
@@ -319,37 +281,58 @@ lcd_char_write_Char:
 			LDA		lcd_char_data
 			AND		#$0F
 			ORA		#$20
-			JSR		lcd_write
-			
-			;*** Wait for 20 ms ***
-			LDHX #SUB_delay_cnt
-			
-			; configure loop delays: 0x001388 = 20 ms
-			LDA		#$00
-			STA		2,X
-			LDA		#$13
-			STA		1,X
-			LDA		#$88
-			STA		0,X
-			
-			; jump to the delay loop
-			JSR		SUB_delay
-			
-			; increment lcd_col_idx
-			LDA		lcd_col_idx
-			INCA
-			STA		lcd_col_idx						
+			JSR		lcd_write					
 			
 			; done
-			PULX
-			PULH
 			RTS
 
 
 ;**************************************************************
 
 ;************************************************************** 
-;* Subroutine Name: num_to_char 
+;* Subroutine Name: lcd_str 
+;* Description: Writes a 0x00 terminated string of bytes to  
+;*				the lcd, starting at the address in the HX 
+;*				register. Does not keep track of location 
+;*				on lcd.
+;*
+;* Registers Modified: Accu A, HX
+;* Entry Variables: HX
+;* Exit Variables:  none
+;**************************************************************
+lcd_str:
+			; reset offset
+			LDA		#$00
+			STA		str_offset
+
+lcd_str_loop:
+			; get data
+			LDA		0,X
+			
+			; increment str_offset
+			LDA		str_offset
+			INCA
+			STA		str_offset
+			
+			; data == 0? then done
+			BEQ		lcd_str_done
+			
+			; write data to lcd
+			JSR		lcd_char
+			
+			; repeat
+			BRA		lcd_str_loop
+
+
+lcd_str_done:
+
+			RTS
+
+;**************************************************************
+
+
+;************************************************************** 
+;* Subroutine Name: lcd_num_to_char 
 ;* Description: Takes a number in Accu A and converts it to the
 ;*				ASCII representation of that number. Only works
 ;*				for lower for bits of Accu A.
@@ -364,3 +347,81 @@ lcd_num_to_char:
 			RTS
 			
 ;**************************************************************
+
+
+;************************************************************** 
+;* Subroutine Name: lcd_clear 
+;* Description: Sends the clear command to the lcd and waits
+;*				for it to clear (20 ms).
+;*
+;* Registers Modified: A, HX
+;* Entry Variables: None
+;* Exit Variables: None 
+;**************************************************************
+lcd_clear:
+								
+			; Send display clear command
+			LDA		#$00
+			JSR		lcd_write
+			LDA		#$01
+			JSR		lcd_write
+						
+;*** Wait for 20 ms ***
+			LDHX #SUB_delay_cnt
+			
+			; configure loop delays: 0x001388 = 20 ms
+			LDA		#$00
+			STA		2,X
+			LDA		#$13
+			STA		1,X
+			LDA		#$88
+			STA		0,X
+			
+			; jump to the delay loop
+			JSR		SUB_delay
+
+			; done
+			RTS
+			
+;**************************************************************
+
+
+;************************************************************** 
+;* Subroutine Name: lcd_goto_row0 
+;* Description: Commands the LCD to put the cursor at colum 0
+;*				of row 0.
+;*
+;* Registers Modified: A, HX
+;* Entry Variables: None
+;* Exit Variables: None 
+;**************************************************************
+lcd_goto_row0:
+
+			; go back to first column and row of LCD
+			LDA		#$0C
+			JSR		lcd_write
+			LDA		#$00
+			JSR		lcd_write
+
+;**************************************************************
+
+;************************************************************** 
+;* Subroutine Name: lcd_goto_row1 
+;* Description: Commands the LCD to put the cursor at colum 0
+;*				of row 1.
+;*
+;* Registers Modified: A, HX
+;* Entry Variables: None
+;* Exit Variables: None 
+;**************************************************************
+lcd_goto_row1:
+
+			; go back to first column and row of LCD
+			LDA		#$04
+			JSR		lcd_write
+			LDA		#$00
+			JSR		lcd_write
+			
+;**************************************************************
+
+

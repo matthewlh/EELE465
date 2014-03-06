@@ -21,7 +21,7 @@
             XREF bus_init, bus_read, bus_write, bus_addr, bus_data
             XREF led_write, led_data
             XREF keypad_interpret, keypad_scan, keypad_data_0, keypad_data_1
-            XREF lcd_init, lcd_write, lcd_char, lcd_num_to_char, lcd_data, lcd_char_data, lcd_col_idx
+            XREF lcd_init, lcd_write, lcd_char, lcd_str, lcd_num_to_char, lcd_clear, lcd_goto_row0, lcd_goto_row1, lcd_data, lcd_char_data, lcd_col_idx
             XREF adc_init, adc_data_0, adc_data_1
 
 
@@ -34,7 +34,7 @@ MY_ZEROPAGE: SECTION  SHORT
 MY_CONST: SECTION
 ; Constant Values and Tables Section
 
-	
+			str_prompt:			DC.B 	"Enter n: "			
 			
 ; code section
 MyCode:     SECTION
@@ -78,25 +78,33 @@ mainLoop:
 			
 			
 			; clear display
+			JSR		lcd_clear
 			
 
 ;*** prompt user for input
+			LDHX	str_prompt
+			LDA		'A'
+			JSR		lcd_char
+			;JSR		lcd_str
+
+mainloop_prompt:
+			BRA mainloop_prompt
 			
 			
 ;*** wait for user response, n
-mainloop_prompt:
+mainloop_prompt_wait:
 
            	; Update heartheat LED while we wait	
-			;JSR		led_write
+			JSR		led_write
 			
 			; feed watchdog while we wait
-            ;feed_watchdog
+            feed_watchdog
 			
 			; scan keypad
-           	;JSR		keypad_scan
+           	JSR		keypad_scan
 			
 			; check for button press
-			;JSR		keypad_interpret
+			JSR		keypad_interpret
 			
 			; if no button press, repeat
 			
@@ -145,6 +153,8 @@ _Vtpmovf:
 			PSHA
 			PSHH
 			PSHX
+			
+			BRA		other_stuff
 
 ;*** Write ADC value to LCD
 
@@ -225,7 +235,9 @@ write_to_lcd:
 			
 			; write to LCD
 			JSR		lcd_char
-			   
+			
+			
+other_stuff:
 ;*** Other Stuff            
 			; Toggle Heartbeat LED			
 			LDA		led_data			; load current LED pattern
