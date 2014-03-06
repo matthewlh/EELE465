@@ -204,16 +204,17 @@ keypad_scan:
 
 ;************************************************************** 
 ;* Subroutine Name: keypad_interpret  
-;* Description: Interpres the data from the keypad.
+;* Description: Checks if a numeric key (1..9) was pressed. 
+;*				When a key is pressed, it writes it to the LCD 
+;*				and returns the numeric value in Accu A. 
+;*				Returns 0 when (1..9) was not pressed.
+;*				
 ;* 
 ;* Registers Modified: None
 ;* Entry Variables: None
-;* Exit Variables: None
+;* Exit Variables: Accu A
 ;**************************************************************
 keypad_interpret:
-
-			; preserve registers
-			PSHA
 
 ;*** was a key pressed in the first 2 rows ? ***
 			
@@ -236,11 +237,9 @@ keypad_interpret_1:
 			LDA		#'1'
 			JSR		lcd_char
 			
-			; put 0x1 on LEDs
-			LDA		led_data
-			AND		#$F0
-			ORA		#$01
-			STA		led_data
+			; return 0x01
+			LDA		#$01
+			RTS
 
 
 keypad_interpret_2:
@@ -254,11 +253,9 @@ keypad_interpret_2:
 			LDA		#'2'
 			JSR		lcd_char
 			
-			; put 0x1 on LEDs
-			LDA		led_data
-			AND		#$F0
-			ORA		#$02
-			STA		led_data
+			; return 0x02
+			LDA		#$02
+			RTS
 
 keypad_interpret_3:
 
@@ -271,11 +268,9 @@ keypad_interpret_3:
 			LDA		#'3'
 			JSR		lcd_char
 			
-			; put 0x3 on LEDs
-			LDA		led_data
-			AND		#$F0
-			ORA		#$03
-			STA		led_data
+			; return 0x03
+			LDA		#$03
+			RTS
 
 
 keypad_interpret_A:
@@ -289,11 +284,9 @@ keypad_interpret_A:
 			LDA		#'A'
 			JSR		lcd_char
 			
-			; put 0xA on LEDs
-			LDA		led_data
-			AND		#$F0
-			ORA		#$0A
-			STA		led_data
+			; return 0x0A
+			LDA		#$0A
+			RTS
 			
 			BRA		keypad_interpret_4
 keypad_interpret_lower_rows_jump:
@@ -311,11 +304,9 @@ keypad_interpret_4:
 			LDA		#'4'
 			JSR		lcd_char
 			
-			; put 0x4 on LEDs
-			LDA		led_data
-			AND		#$F0
-			ORA		#$04
-			STA		led_data
+			; return 0x04
+			LDA		#$04
+			RTS
 
 
 keypad_interpret_5:
@@ -329,11 +320,9 @@ keypad_interpret_5:
 			LDA		#'5'
 			JSR		lcd_char
 			
-			; put 0x5 on LEDs
-			LDA		led_data
-			AND		#$F0
-			ORA		#$05
-			STA		led_data
+			; return 0x05
+			LDA		#$05
+			RTS
 
 
 keypad_interpret_6:
@@ -347,11 +336,9 @@ keypad_interpret_6:
 			LDA		#'6'
 			JSR		lcd_char
 			
-			; put 0x6 on LEDs
-			LDA		led_data
-			AND		#$F0
-			ORA		#$06
-			STA		led_data
+			; return 0x06
+			LDA		#$06
+			RTS
 
 
 keypad_interpret_B:
@@ -365,11 +352,9 @@ keypad_interpret_B:
 			LDA		#'B'
 			JSR		lcd_char
 			
-			; put 0xB on LEDs
-			LDA		led_data
-			AND		#$F0
-			ORA		#$0B
-			STA		led_data
+			; return 0x0B
+			LDA		#$0B
+			RTS
 
 
 
@@ -396,11 +381,9 @@ keypad_interpret_7:
 			LDA		#'7'
 			JSR		lcd_char
 			
-			; put 0x7 on LEDs
-			LDA		led_data
-			AND		#$F0
-			ORA		#$07
-			STA		led_data
+			; return 0x07
+			LDA		#$07
+			RTS
 
 
 keypad_interpret_8:
@@ -414,11 +397,9 @@ keypad_interpret_8:
 			LDA		#'8'
 			JSR		lcd_char
 			
-			; put 0x8 on LEDs
-			LDA		led_data
-			AND		#$F0
-			ORA		#$08
-			STA		led_data
+			; return 0x08
+			LDA		#$08
+			RTS
 
 
 keypad_interpret_9:
@@ -432,11 +413,9 @@ keypad_interpret_9:
 			LDA		#'9'
 			JSR		lcd_char
 			
-			; put 0x9 on LEDs
-			LDA		led_data
-			AND		#$F0
-			ORA		#$09
-			STA		led_data
+			; return 0x09
+			LDA		#$09
+			RTS
 
 
 keypad_interpret_C:
@@ -450,11 +429,9 @@ keypad_interpret_C:
 			LDA		#'C'
 			JSR		lcd_char
 			
-			; put 0xC on LEDs
-			LDA		led_data
-			AND		#$F0
-			ORA		#$0C
-			STA		led_data		
+			; return 0x0C
+			LDA		#$0C
+			RTS		
 			
 			
 			BRA 	keypad_interpret_E
@@ -473,11 +450,9 @@ keypad_interpret_E:
 			LDA		#'E'
 			JSR		lcd_char
 			
-			; put 0xE on LEDs
-			LDA		led_data
-			AND		#$F0
-			ORA		#$0E
-			STA		led_data
+			; return 0x0E
+			LDA		#$0E
+			RTS
 
 
 keypad_interpret_0:
@@ -491,11 +466,9 @@ keypad_interpret_0:
 			LDA		#'0'
 			JSR		lcd_char
 			
-			; put 0x0 on LEDs
-			LDA		led_data
-			AND		#$F0
-			ORA		#$00
-			STA		led_data
+			; return 0x00
+			LDA		#$00
+			RTS
 
 
 keypad_interpret_F:
@@ -509,11 +482,9 @@ keypad_interpret_F:
 			LDA		#'F'
 			JSR		lcd_char
 			
-			; put 0xF on LEDs
-			LDA		led_data
-			AND		#$F0
-			ORA		#$0F
-			STA		led_data
+			; return 0x00
+			LDA		#$00
+			RTS
 
 
 keypad_interpret_D:
@@ -527,21 +498,17 @@ keypad_interpret_D:
 			LDA		#'D'
 			JSR		lcd_char
 			
-			; put 0xD on LEDs
-			LDA		led_data
-			AND		#$F0
-			ORA		#$0D
-			STA		led_data
+			; return 0x0D
+			LDA		#$0D
+			RTS
 
 			
 
 keypad_interpret_done:
 ;*** done ***
-            
-			; restore registers
-			PULA
 			
-			; return from subroutine keypad_scan
+			; return 0x00
+			LDA		#$00
 			RTS
 
 ;**************************************************************

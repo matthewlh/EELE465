@@ -22,14 +22,17 @@
             XREF led_write, led_data
             XREF keypad_interpret, keypad_scan, keypad_data_0, keypad_data_1
             XREF lcd_init, lcd_write, lcd_char, lcd_str, lcd_num_to_char, lcd_clear, lcd_goto_row0, lcd_goto_row1, lcd_data, lcd_char_data, lcd_col_idx
-            XREF adc_init, adc_data_0, adc_data_1
+            XREF adc_init, adc_read_ch26_avg, adc_read_ch2_avg, adc_read_avg, adc_data_0, adc_data_1
 
 
 ; variable/data section
 MY_ZEROPAGE: SECTION  SHORT
 			
-			; counter for SUB_delay subroutine
-			SUB_delay_cnt:		DS.B	3
+			SUB_delay_cnt:		DS.B	3		; counter for SUB_delay subroutine
+			
+			num_samples:		DS.B    1		; number of samples to take on the ADC	
+			
+			temp:				DS.B	1		; some space to hold stuff	
 			
 MY_CONST: SECTION
 ; Constant Values and Tables Section
@@ -85,12 +88,7 @@ mainLoop:
 ;*** prompt user for input
 			LDHX	#str_prompt
 			LDA		str_prompt_length
-			JSR		lcd_str
-
-mainloop_prompt:
-			feed_watchdog
-			BRA mainloop_prompt
-			
+			JSR		lcd_str			
 			
 ;*** wait for user response, n
 mainloop_prompt_wait:
@@ -108,36 +106,73 @@ mainloop_prompt_wait:
 			JSR		keypad_interpret
 			
 			; if no button press, repeat
+			BEQ		mainloop_prompt_wait		
 			
 			
-;*** while n != 0
-mainloop_read:			
+;*** read external temp sensor n times
+			STA		num_samples
+			JSR		adc_read_ch2_avg
+			
+;*** do math external temp sensor data
 
-           	; Update heartheat LED while we wait	
-			;JSR		led_write
+			; multiply n*4
+			LDA		num_samples
+			LDX		#04
+			MUL		; X:A <- (X) * (A)
 			
-			; feed watchdog while we wait
-            ;feed_watchdog
-
-			; read external temp sensor
-				
-
-			; read internal temp sensor			
+			; load addr of adc_data to HX 
+			LDHX	adc_data_0 
 			
+			; move result of n*4 to X
+			PSHA
+			PULX
 			
-			; repeat if n != 0
+			; load A with lower byte of adc_data 
+			LDA		adc_data_1
 			
-;*** do math internal temp data
+			; divide adc_data by (n*4)
+			DIV		; A <- (H:A)/(X)
 
+			; save result in temp
+			STA		temp
 			
-;*** do math internal temp data
+			; subtract result from offset $93
+			LDA		#$93
+			SUB		temp
+			STA		temp
 
+; make sure value less than 99
+			CMP		#$63
+			BLO		mainloop_write_external
+			LDA		#$63			
+			
+mainloop_write_external:
+			; write upper numbder to LCD
+			LDHX	#$000A
+			DIV						; A <= (H:A)/(X), H <= (remainder)
+			
+			; convert to ASCII char
+			JSR		lcd_num_to_char
+			
+			; write to LCD
+			JSR		lcd_char
+			
+			; move remainder from H to A
+			PSHH
+			PULA
+			
+			; convert to ASCII char
+			JSR		lcd_num_to_char
+			
+			; write to LCD
+			JSR		lcd_char
+			
 
-;*** displau result
+;*** repeat
 mainloop_end:
            	
             feed_watchdog
-            BRA    	mainLoop
+            BRA    	mainloop_end
 
 
 ;************************************************************** 
