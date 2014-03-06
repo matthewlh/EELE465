@@ -29,7 +29,7 @@ MY_ZEROPAGE: SECTION  SHORT
 			lcd_char_data:	DS.B	1	; used by lcd_char subroutine to store a character
 			lcd_col_idx:	DS.B	1	; index of the column of the LCD that the cursor is currently in
 			
-			str_offset:		DS.B	1	; holds the offset into a string for lcd_str
+			str_length:		DS.B	1	; holds the offset into a string for lcd_str
 			
 ; code section
 MyCode:     SECTION
@@ -269,9 +269,14 @@ lcd_write:
 ;* Exit Variables:  
 ;**************************************************************
 lcd_char:
+			; preserve registers
+			PSHH
+			PSHX
+			
+			; save data
+			STA		lcd_char_data
 
 			; write upper nibble
-			LDA		lcd_char_data
 			NSA
 			AND		#$0F
 			ORA		#$20
@@ -281,9 +286,30 @@ lcd_char:
 			LDA		lcd_char_data
 			AND		#$0F
 			ORA		#$20
-			JSR		lcd_write					
+			JSR		lcd_write
+			
+;*** Wait for 20 ms ***
+			LDHX #SUB_delay_cnt
+
+			; configure loop delays: 0x001388 = 20 ms
+			LDA		#$00
+			STA		2,X
+			LDA		#$13
+			STA		1,X
+			LDA		#$88
+			STA		0,X
+
+			; jump to the delay loop
+			JSR		SUB_delay
+
+			; increment lcd_col_idx
+			LDA		lcd_col_idx
+			INCA
+			STA		lcd_col_idx					
 			
 			; done
+			PULX
+			PULH
 			RTS
 
 
@@ -297,32 +323,41 @@ lcd_char:
 ;*				on lcd.
 ;*
 ;* Registers Modified: Accu A, HX
-;* Entry Variables: HX
+;* Entry Variables: HX, A
 ;* Exit Variables:  none
 ;**************************************************************
 lcd_str:
-			; reset offset
-			LDA		#$00
-			STA		str_offset
+			; save str length
+			STA		str_length
 
 lcd_str_loop:
 			; get data
 			LDA		0,X
 			
-			; increment str_offset
-			LDA		str_offset
-			INCA
-			STA		str_offset
-			
-			; data == 0? then done
-			BEQ		lcd_str_done
-			
 			; write data to lcd
 			JSR		lcd_char
 			
-			; repeat
-			BRA		lcd_str_loop
-
+			; increament lower byte X
+			PSHX
+			PULA
+			ADD		#01
+			PSHA
+			PULX
+			
+			; increment upper byte H
+			PSHH
+			PULA
+			ADC		#$00
+			PSHA
+			PULH
+			
+			; decrement str_length
+			LDA		str_length
+			DECA
+			STA		str_length
+			
+			; repeat if length != 0
+			BNE		lcd_str_loop
 
 lcd_str_done:
 

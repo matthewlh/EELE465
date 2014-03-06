@@ -34,7 +34,8 @@ MY_ZEROPAGE: SECTION  SHORT
 MY_CONST: SECTION
 ; Constant Values and Tables Section
 
-			str_prompt:			DC.B 	"Enter n: "			
+			str_prompt:			DC.B 	"Enter n: "	
+			str_prompt_length:	DC.B	9		
 			
 ; code section
 MyCode:     SECTION
@@ -82,12 +83,12 @@ mainLoop:
 			
 
 ;*** prompt user for input
-			LDHX	str_prompt
-			LDA		'A'
-			JSR		lcd_char
-			;JSR		lcd_str
+			LDHX	#str_prompt
+			LDA		str_prompt_length
+			JSR		lcd_str
 
 mainloop_prompt:
+			feed_watchdog
 			BRA mainloop_prompt
 			
 			
