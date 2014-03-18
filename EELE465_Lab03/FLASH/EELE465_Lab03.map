@@ -30,14 +30,14 @@ Section Name                    Size  Type     From       To       Segment
 ---------------------------------------------------------------------------------------------
 .init                            267     R     0xE000     0xE10A   ROM
 MY_ZEROPAGE                       22   R/W       0x60       0x75   Z_RAM
-MyCode                           935     R     0xE10B     0xE4B1   ROM
-MY_CONST                          21     R     0xE4B2     0xE4C6   ROM
+MyCode                           887     R     0xE10B     0xE481   ROM
+MY_CONST                          21     R     0xE482     0xE496   ROM
 .stack                            64   R/W      0x100      0x13F   RAM
 .vectSeg0_vect                     2     R     0xFFF0     0xFFF1   .vectSeg0
 .vectSeg1_vect                     2     R     0xFFFE     0xFFFF   .vectSeg1
 
 Summary of section sizes per section type:
-READ_ONLY (R):         4CB (dec:     1227)
+READ_ONLY (R):         49B (dec:     1179)
 READ_WRITE (R/W):       56 (dec:       86)
 
 *********************************************************************************************
@@ -75,25 +75,25 @@ MODULE:                 -- bus_asm.obj --
 MODULE:                 -- keypad_asm.obj --
 - PROCEDURES:
      keypad_scan                               E19A      8E     142       2   MyCode      
-     keypad_interpret                          E228      1C      28       2   MyCode      
-     keypad_interpret_2                        E244       F      15       0   MyCode      
-     keypad_interpret_3                        E253       F      15       0   MyCode      
-     keypad_interpret_A                        E262      11      17       0   MyCode      
-     keypad_interpret_lower_rows_jump          E273       2       2       0   MyCode      
-     keypad_interpret_4                        E275       F      15       0   MyCode      
-     keypad_interpret_5                        E284       F      15       0   MyCode      
-     keypad_interpret_6                        E293       F      15       0   MyCode      
-     keypad_interpret_B                        E2A2       F      15       0   MyCode      
-     keypad_interpret_lower_rows               E2B1      1B      27       0   MyCode      
-     keypad_interpret_8                        E2CC       F      15       0   MyCode      
-     keypad_interpret_9                        E2DB       F      15       0   MyCode      
-     keypad_interpret_C                        E2EA      11      17       0   MyCode      
-     keypad_interpret_done_jump                E2FB       2       2       0   MyCode      
-     keypad_interpret_E                        E2FD       F      15       0   MyCode      
-     keypad_interpret_0                        E30C       F      15       0   MyCode      
-     keypad_interpret_F                        E31B       F      15       0   MyCode      
-     keypad_interpret_D                        E32A       F      15       0   MyCode      
-     keypad_interpret_done                     E339       3       3       0   MyCode      
+     keypad_interpret                          E228      19      25       2   MyCode      
+     keypad_interpret_2                        E241       C      12       0   MyCode      
+     keypad_interpret_3                        E24D       C      12       0   MyCode      
+     keypad_interpret_A                        E259       E      14       0   MyCode      
+     keypad_interpret_lower_rows_jump          E267       2       2       0   MyCode      
+     keypad_interpret_4                        E269       C      12       0   MyCode      
+     keypad_interpret_5                        E275       C      12       0   MyCode      
+     keypad_interpret_6                        E281       C      12       0   MyCode      
+     keypad_interpret_B                        E28D       C      12       0   MyCode      
+     keypad_interpret_lower_rows               E299      18      24       0   MyCode      
+     keypad_interpret_8                        E2B1       C      12       0   MyCode      
+     keypad_interpret_9                        E2BD       C      12       0   MyCode      
+     keypad_interpret_C                        E2C9       E      14       0   MyCode      
+     keypad_interpret_done_jump                E2D7       2       2       0   MyCode      
+     keypad_interpret_E                        E2D9       C      12       0   MyCode      
+     keypad_interpret_0                        E2E5       C      12       0   MyCode      
+     keypad_interpret_F                        E2F1       C      12       0   MyCode      
+     keypad_interpret_D                        E2FD       C      12       0   MyCode      
+     keypad_interpret_done                     E309       3       3       0   MyCode      
 - VARIABLES:
      keypad_data_0                               66       1       1       5   MY_ZEROPAGE 
      keypad_data_1                               67       1       1       5   MY_ZEROPAGE 
@@ -102,15 +102,15 @@ MODULE:                 -- keypad_asm.obj --
      keypad_data_cmp                             6A       1       1      18   MY_ZEROPAGE 
 MODULE:                 -- lcd_asm.obj --
 - PROCEDURES:
-     lcd_init                                  E33C      9A     154       1   MyCode      
-     lcd_write                                 E3D6      39      57      20   MyCode      
-     lcd_char                                  E40F      32      50      23   MyCode      
-     lcd_str                                   E441       2       2       3   MyCode      
-     lcd_str_loop                              E443      18      24       0   MyCode      
-     lcd_num_to_char                           E45B       3       3       4   MyCode      
-     lcd_clear                                 E45E      1C      28       2   MyCode      
-     lcd_goto_row0                             E47A       A      10       0   MyCode      
-     lcd_goto_row1                             E484       A      10       0   MyCode      
+     lcd_init                                  E30C      9A     154       1   MyCode      
+     lcd_write                                 E3A6      39      57      20   MyCode      
+     lcd_char                                  E3DF      32      50       7   MyCode      
+     lcd_str                                   E411       2       2       3   MyCode      
+     lcd_str_loop                              E413      18      24       0   MyCode      
+     lcd_num_to_char                           E42B       3       3       4   MyCode      
+     lcd_clear                                 E42E      1C      28       2   MyCode      
+     lcd_goto_row0                             E44A       A      10       0   MyCode      
+     lcd_goto_row1                             E454       A      10       0   MyCode      
 - VARIABLES:
      lcd_data                                    6B       1       1       3   MY_ZEROPAGE 
      lcd_char_data                               6C       1       1       2   MY_ZEROPAGE 
@@ -118,7 +118,7 @@ MODULE:                 -- lcd_asm.obj --
      str_length                                  6E       1       1       3   MY_ZEROPAGE 
 MODULE:                 -- led_asm.obj --
 - PROCEDURES:
-     led_write                                 E48E      24      36       2   MyCode      
+     led_write                                 E45E      24      36       2   MyCode      
 - VARIABLES:
      led_data                                    6F       1       1       5   MY_ZEROPAGE 
 MODULE:                 -- main_asm.obj --
@@ -143,12 +143,12 @@ MODULE:                 -- main_asm.obj --
      num_samples                                 73       1       1       2   MY_ZEROPAGE 
      temp                                        74       1       1       6   MY_ZEROPAGE 
      temp_k                                      75       1       1       3   MY_ZEROPAGE 
-     str_prompt                                E4B2       9       9       1   MY_CONST    
-     str_prompt_length                         E4BB       1       1       1   MY_CONST    
-     str_TK                                    E4BC       4       4       1   MY_CONST    
-     str_TK_length                             E4C0       1       1       1   MY_CONST    
-     str_TC                                    E4C1       5       5       1   MY_CONST    
-     str_TC_length                             E4C6       1       1       1   MY_CONST    
+     str_prompt                                E482       9       9       1   MY_CONST    
+     str_prompt_length                         E48B       1       1       1   MY_CONST    
+     str_TK                                    E48C       4       4       1   MY_CONST    
+     str_TK_length                             E490       1       1       1   MY_CONST    
+     str_TC                                    E491       5       5       1   MY_CONST    
+     str_TC_length                             E496       1       1       1   MY_CONST    
 - LABELS:
      __SEG_END_SSTACK                           140       0       0       1               
 
@@ -158,7 +158,7 @@ MODULE STATISTIC
 ---------------------------------------------------------------------------------------------
   adc_asm.obj                                  4     85      0
   bus_asm.obj                                  2     58      0
-  keypad_asm.obj                               5    418      0
+  keypad_asm.obj                               5    370      0
   lcd_asm.obj                                  4    338      0
   led_asm.obj                                  1     36      0
   main_asm.obj                                 6    267     21
@@ -239,41 +239,41 @@ OBJECT LIST SORTED BY ADDRESS
      bus_read                                  E16A      1A      26       4   MyCode      
      bus_write                                 E184      16      22       7   MyCode      
      keypad_scan                               E19A      8E     142       2   MyCode      
-     keypad_interpret                          E228      1C      28       2   MyCode      
-     keypad_interpret_2                        E244       F      15       0   MyCode      
-     keypad_interpret_3                        E253       F      15       0   MyCode      
-     keypad_interpret_A                        E262      11      17       0   MyCode      
-     keypad_interpret_lower_rows_jump          E273       2       2       0   MyCode      
-     keypad_interpret_4                        E275       F      15       0   MyCode      
-     keypad_interpret_5                        E284       F      15       0   MyCode      
-     keypad_interpret_6                        E293       F      15       0   MyCode      
-     keypad_interpret_B                        E2A2       F      15       0   MyCode      
-     keypad_interpret_lower_rows               E2B1      1B      27       0   MyCode      
-     keypad_interpret_8                        E2CC       F      15       0   MyCode      
-     keypad_interpret_9                        E2DB       F      15       0   MyCode      
-     keypad_interpret_C                        E2EA      11      17       0   MyCode      
-     keypad_interpret_done_jump                E2FB       2       2       0   MyCode      
-     keypad_interpret_E                        E2FD       F      15       0   MyCode      
-     keypad_interpret_0                        E30C       F      15       0   MyCode      
-     keypad_interpret_F                        E31B       F      15       0   MyCode      
-     keypad_interpret_D                        E32A       F      15       0   MyCode      
-     keypad_interpret_done                     E339       3       3       0   MyCode      
-     lcd_init                                  E33C      9A     154       1   MyCode      
-     lcd_write                                 E3D6      39      57      20   MyCode      
-     lcd_char                                  E40F      32      50      23   MyCode      
-     lcd_str                                   E441       2       2       3   MyCode      
-     lcd_str_loop                              E443      18      24       0   MyCode      
-     lcd_num_to_char                           E45B       3       3       4   MyCode      
-     lcd_clear                                 E45E      1C      28       2   MyCode      
-     lcd_goto_row0                             E47A       A      10       0   MyCode      
-     lcd_goto_row1                             E484       A      10       0   MyCode      
-     led_write                                 E48E      24      36       2   MyCode      
-     str_prompt                                E4B2       9       9       1   MY_CONST    
-     str_prompt_length                         E4BB       1       1       1   MY_CONST    
-     str_TK                                    E4BC       4       4       1   MY_CONST    
-     str_TK_length                             E4C0       1       1       1   MY_CONST    
-     str_TC                                    E4C1       5       5       1   MY_CONST    
-     str_TC_length                             E4C6       1       1       1   MY_CONST    
+     keypad_interpret                          E228      19      25       2   MyCode      
+     keypad_interpret_2                        E241       C      12       0   MyCode      
+     keypad_interpret_3                        E24D       C      12       0   MyCode      
+     keypad_interpret_A                        E259       E      14       0   MyCode      
+     keypad_interpret_lower_rows_jump          E267       2       2       0   MyCode      
+     keypad_interpret_4                        E269       C      12       0   MyCode      
+     keypad_interpret_5                        E275       C      12       0   MyCode      
+     keypad_interpret_6                        E281       C      12       0   MyCode      
+     keypad_interpret_B                        E28D       C      12       0   MyCode      
+     keypad_interpret_lower_rows               E299      18      24       0   MyCode      
+     keypad_interpret_8                        E2B1       C      12       0   MyCode      
+     keypad_interpret_9                        E2BD       C      12       0   MyCode      
+     keypad_interpret_C                        E2C9       E      14       0   MyCode      
+     keypad_interpret_done_jump                E2D7       2       2       0   MyCode      
+     keypad_interpret_E                        E2D9       C      12       0   MyCode      
+     keypad_interpret_0                        E2E5       C      12       0   MyCode      
+     keypad_interpret_F                        E2F1       C      12       0   MyCode      
+     keypad_interpret_D                        E2FD       C      12       0   MyCode      
+     keypad_interpret_done                     E309       3       3       0   MyCode      
+     lcd_init                                  E30C      9A     154       1   MyCode      
+     lcd_write                                 E3A6      39      57      20   MyCode      
+     lcd_char                                  E3DF      32      50       7   MyCode      
+     lcd_str                                   E411       2       2       3   MyCode      
+     lcd_str_loop                              E413      18      24       0   MyCode      
+     lcd_num_to_char                           E42B       3       3       4   MyCode      
+     lcd_clear                                 E42E      1C      28       2   MyCode      
+     lcd_goto_row0                             E44A       A      10       0   MyCode      
+     lcd_goto_row1                             E454       A      10       0   MyCode      
+     led_write                                 E45E      24      36       2   MyCode      
+     str_prompt                                E482       9       9       1   MY_CONST    
+     str_prompt_length                         E48B       1       1       1   MY_CONST    
+     str_TK                                    E48C       4       4       1   MY_CONST    
+     str_TK_length                             E490       1       1       1   MY_CONST    
+     str_TC                                    E491       5       5       1   MY_CONST    
+     str_TC_length                             E496       1       1       1   MY_CONST    
 
 *********************************************************************************************
 UNUSED-OBJECTS SECTION
@@ -311,23 +311,22 @@ bus_write                 USES bus_data bus_addr
 keypad_scan               USES keypad_data_0 keypad_data_0_old keypad_data_1 
                                 keypad_data_1_old bus_addr bus_data bus_write bus_read 
 keypad_interpret          USES keypad_data_0_old keypad_data_0 keypad_data_cmp 
-                                lcd_char 
-keypad_interpret_2        USES keypad_data_cmp lcd_char 
-keypad_interpret_3        USES keypad_data_cmp lcd_char 
-keypad_interpret_A        USES keypad_data_cmp lcd_char 
-keypad_interpret_4        USES keypad_data_cmp lcd_char 
-keypad_interpret_5        USES keypad_data_cmp lcd_char 
-keypad_interpret_6        USES keypad_data_cmp lcd_char 
-keypad_interpret_B        USES keypad_data_cmp lcd_char 
+keypad_interpret_2        USES keypad_data_cmp 
+keypad_interpret_3        USES keypad_data_cmp 
+keypad_interpret_A        USES keypad_data_cmp 
+keypad_interpret_4        USES keypad_data_cmp 
+keypad_interpret_5        USES keypad_data_cmp 
+keypad_interpret_6        USES keypad_data_cmp 
+keypad_interpret_B        USES keypad_data_cmp 
 keypad_interpret_lower_rows USES keypad_data_1_old keypad_data_1 
-                                keypad_data_cmp lcd_char 
-keypad_interpret_8        USES keypad_data_cmp lcd_char 
-keypad_interpret_9        USES keypad_data_cmp lcd_char 
-keypad_interpret_C        USES keypad_data_cmp lcd_char 
-keypad_interpret_E        USES keypad_data_cmp lcd_char 
-keypad_interpret_0        USES keypad_data_cmp lcd_char 
-keypad_interpret_F        USES keypad_data_cmp lcd_char 
-keypad_interpret_D        USES keypad_data_cmp lcd_char 
+                                keypad_data_cmp 
+keypad_interpret_8        USES keypad_data_cmp 
+keypad_interpret_9        USES keypad_data_cmp 
+keypad_interpret_C        USES keypad_data_cmp 
+keypad_interpret_E        USES keypad_data_cmp 
+keypad_interpret_0        USES keypad_data_cmp 
+keypad_interpret_F        USES keypad_data_cmp 
+keypad_interpret_D        USES keypad_data_cmp 
 lcd_init                  USES SUB_delay_cnt SUB_delay lcd_write 
 lcd_write                 USES lcd_data bus_data bus_addr bus_write 
                                 SUB_delay_cnt SUB_delay 
@@ -372,5 +371,5 @@ STATISTIC SECTION
 ExeFile:
 --------
 Number of blocks to be downloaded: 5
-Total size of all blocks to be downloaded: 1227
+Total size of all blocks to be downloaded: 1179
 

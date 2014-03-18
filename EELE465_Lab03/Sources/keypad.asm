@@ -235,7 +235,7 @@ keypad_interpret_1:
 
 			; write a '1' to the LCD
 			LDA		#'1'
-			JSR		lcd_char
+			;JSR		lcd_char
 			
 			; return 0x01
 			LDA		#$01
@@ -251,7 +251,7 @@ keypad_interpret_2:
 
 			; write a '2' to the LCD
 			LDA		#'2'
-			JSR		lcd_char
+			;JSR		lcd_char
 			
 			; return 0x02
 			LDA		#$02
@@ -266,7 +266,7 @@ keypad_interpret_3:
 
 			; write a '3' to the LCD
 			LDA		#'3'
-			JSR		lcd_char
+			;JSR		lcd_char
 			
 			; return 0x03
 			LDA		#$03
@@ -282,7 +282,7 @@ keypad_interpret_A:
 
 			; write a 'A' to the LCD
 			LDA		#'A'
-			JSR		lcd_char
+			;JSR		lcd_char
 			
 			; return 0x0A
 			LDA		#$0A
@@ -302,7 +302,7 @@ keypad_interpret_4:
 
 			; write a '4' to the LCD
 			LDA		#'4'
-			JSR		lcd_char
+			;JSR		lcd_char
 			
 			; return 0x04
 			LDA		#$04
@@ -318,7 +318,7 @@ keypad_interpret_5:
 
 			; write a '5' to the LCD
 			LDA		#'5'
-			JSR		lcd_char
+			;JSR		lcd_char
 			
 			; return 0x05
 			LDA		#$05
@@ -334,7 +334,7 @@ keypad_interpret_6:
 
 			; write a '6' to the LCD
 			LDA		#'6'
-			JSR		lcd_char
+			;JSR		lcd_char
 			
 			; return 0x06
 			LDA		#$06
@@ -350,7 +350,7 @@ keypad_interpret_B:
 
 			; write a 'B' to the LCD
 			LDA		#'B'
-			JSR		lcd_char
+			;JSR		lcd_char
 			
 			; return 0x0B
 			LDA		#$0B
@@ -379,7 +379,7 @@ keypad_interpret_7:
 
 			; write a '7' to the LCD
 			LDA		#'7'
-			JSR		lcd_char
+			;JSR		lcd_char
 			
 			; return 0x07
 			LDA		#$07
@@ -395,7 +395,7 @@ keypad_interpret_8:
 
 			; write a '8' to the LCD
 			LDA		#'8'
-			JSR		lcd_char
+			;JSR		lcd_char
 			
 			; return 0x08
 			LDA		#$08
@@ -411,7 +411,7 @@ keypad_interpret_9:
 
 			; write a '9' to the LCD
 			LDA		#'9'
-			JSR		lcd_char
+			;JSR		lcd_char
 			
 			; return 0x09
 			LDA		#$09
@@ -427,7 +427,7 @@ keypad_interpret_C:
 
 			; write a 'C' to the LCD
 			LDA		#'C'
-			JSR		lcd_char
+			;JSR		lcd_char
 			
 			; return 0x0C
 			LDA		#$0C
@@ -448,7 +448,7 @@ keypad_interpret_E:
 
 			; write a 'E' to the LCD
 			LDA		#'E'
-			JSR		lcd_char
+			;JSR		lcd_char
 			
 			; return 0x0E
 			LDA		#$0E
@@ -464,7 +464,7 @@ keypad_interpret_0:
 
 			; write a '0' to the LCD
 			LDA		#'0'
-			JSR		lcd_char
+			;JSR		lcd_char
 			
 			; return 0x00
 			LDA		#$00
@@ -480,7 +480,7 @@ keypad_interpret_F:
 
 			; write a 'F' to the LCD
 			LDA		#'F'
-			JSR		lcd_char
+			;JSR		lcd_char
 			
 			; return 0x00
 			LDA		#$00
@@ -496,7 +496,7 @@ keypad_interpret_D:
 
 			; write a 'D' to the LCD
 			LDA		#'D'
-			JSR		lcd_char
+			;JSR		lcd_char
 			
 			; return 0x0D
 			LDA		#$0D
@@ -512,3 +512,4 @@ keypad_interpret_done:
 			RTS
 
 ;**************************************************************
+ 
