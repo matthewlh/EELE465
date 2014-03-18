@@ -38,7 +38,12 @@ MY_CONST: SECTION
 ; Constant Values and Tables Section
 
 			str_prompt:			DC.B 	"Enter n: "	
-			str_prompt_length:	DC.B	9		
+			str_prompt_length:	DC.B	9	
+
+			str_TK:				DC.B 	"T,K:"	
+			str_TK_length:		DC.B	4		
+			str_TC:				DC.B 	" T,C:"	
+			str_TC_length:		DC.B	5		
 			
 ; code section
 MyCode:     SECTION
@@ -144,10 +149,23 @@ mainloop_prompt_wait:
 ; make sure value less than 99
 			CMP		#$63
 			BLO		mainloop_write_external
-			LDA		#$63			
+			LDA		#$63	
+			STA		temp		
 			
 mainloop_write_external:
-			; write upper numbder to LCD
+
+			; clear display
+			JSR		lcd_clear
+
+;*** write external temp in K
+			; write "T,K:" to the LCD 
+			LDHX	#str_TK
+			LDA		str_TK_length
+			JSR		lcd_str	
+			
+			LDA		temp
+
+			; write upper number to LCD
 			LDHX	#$000A
 			DIV						; A <= (H:A)/(X), H <= (remainder)
 			
@@ -167,13 +185,37 @@ mainloop_write_external:
 			; write to LCD
 			JSR		lcd_char
 			
+			
+;*** write external temp in C
+			; write " T,C:" to the LCD 
+			LDHX	#str_TC
+			LDA		str_TC_length
+			JSR		lcd_str	
+			
 
-;*** repeat
+;*** wait for '*' key press
 mainloop_end:
-           	
-            feed_watchdog
-            BRA    	mainloop_end
 
+           	; Update heartheat LED while we wait	
+			JSR		led_write
+			
+           	; feed watchdog while we wait
+            feed_watchdog
+            
+            ; scan keypad
+           	JSR		keypad_scan
+			
+			; check for button press
+			JSR		keypad_interpret
+			
+			; if '*' button pressed, restart
+			CBEQA	#$0E, mainloop_restart
+            
+            ; keep waiting for '*' key
+            BRA    	mainloop_end
+            
+mainloop_restart:
+			JMP		mainLoop
 
 ;************************************************************** 
 ;* Subroutine Name: _Vtpmovf 
@@ -185,96 +227,7 @@ mainloop_end:
 ;* Exit Variables: None 
 ;**************************************************************
 _Vtpmovf:   
-			; presever registers
-			PSHA
-			PSHH
-			PSHX
-			
-			BRA		other_stuff
-
-;*** Write ADC value to LCD
-
-			; write to ADCS1 to trigger ADC measurement
-			LDA		ADCSC1
-			STA		ADCSC1	
-								
-			; Send display clear command
-			LDA		#$00
-			JSR		lcd_write
-			LDA		#$01
-			JSR		lcd_write
-						
-			;*** Wait for 20 ms ***
-			LDHX #SUB_delay_cnt
-			
-			; configure loop delays: 0x001388 = 20 ms
-			LDA		#$00
-			STA		2,X
-			LDA		#$13
-			STA		1,X
-			LDA		#$88
-			STA		0,X
-			
-			; jump to the delay loop
-			JSR		SUB_delay
-
-			; go back to first column and row of LCD
-			LDA		#$00
-			JSR		lcd_write
-			LDA		#$00
-			JSR		lcd_write
-			
-			;  reset lcd_col_idx
-			LDA		#$00
-			STA		lcd_col_idx
-			
-			; save adc data
-			LDA		ADCRH
-			STA		adc_data_0
-			LDA		ADCRL
-			STA		adc_data_1
-			
-			; divide adc_data by 4
-			LDHX	adc_data_0
-			LDX		#$04
-			LDA		adc_data_1
-			DIV						; A <= (H:A)/(X)
-			STA		adc_data_0
-			
-			; subtract from offset
-			LDA		#$93		
-			SUB		adc_data_0
-			STA		adc_data_0
-			
-			; make sure value less than 99
-			CMP		#$63
-			BLO		write_to_lcd
-			LDA		#$63			
-			
-write_to_lcd:
-			; write upper numbder to LCD
-			LDHX	#$000A
-			DIV						; A <= (H:A)/(X), H <= (remainder)
-			
-			; convert to ASCII char
-			JSR		lcd_num_to_char
-			
-			; write to LCD
-			JSR		lcd_char
-			
-			; move remainder from H to A
-			PSHH
-			PULA
-			
-			; convert to ASCII char
-			JSR		lcd_num_to_char
-			
-			; write to LCD
-			JSR		lcd_char
-			
-			
-other_stuff:
-;*** Other Stuff            
+			          
 			; Toggle Heartbeat LED			
 			LDA		led_data			; load current LED pattern
 			EOR		#$80				; toggle bit 7
@@ -284,14 +237,8 @@ other_stuff:
 			LDA		TPMSC				; read register
 			AND		#$4E				; clear CH0F bit, but leav others alone
 			STA		TPMSC				; write back register
-			
 
-;*** done ***
-			PULX
-			PULH
-			PULA
-
-			;Return from Interrupt
+			; Done, Return from Interrupt
 			RTI
 			
 			
