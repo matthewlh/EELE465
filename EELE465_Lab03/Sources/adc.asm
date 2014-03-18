@@ -139,6 +139,7 @@ adc_read_avg:
 
 			; load Accu A for loop counter 
 			LDA		adc_num_samples
+			STA		adc_num_samples_remaining
 			
 adc_read_avg_measure:
 
@@ -157,10 +158,12 @@ adc_read_avg_loop_conversion:
 			
 			; add the sample to adc_data
 			LDA		ADCRL
-			ADD		adc_data_0
+			ADD		adc_data_1
+			STA		adc_data_1
 			
-			LDA		ADCRL
-			ADC		adc_data_1			
+			LDA		ADCRH
+			ADC		adc_data_0
+			STA		adc_data_0			
 			
 			; decrement adc_num_samples_remaining
 			LDA 	adc_num_samples_remaining

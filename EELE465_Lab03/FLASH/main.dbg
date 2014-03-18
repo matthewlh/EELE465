@@ -1988,6 +1988,7 @@ MY_ZEROPAGE: SECTION  SHORT
 			num_samples:		DS.B    1		; number of samples to take on the ADC	
 			
 			temp:				DS.B	1		; some space to hold stuff	
+			temp_k:				DS.B	1		; some space to hold stuff	
 			
 MY_CONST: SECTION
 ; Constant Values and Tables Section
@@ -1996,7 +1997,7 @@ MY_CONST: SECTION
 			str_prompt_length:	DC.B	9	
 
 			str_TK:				DC.B 	"T,K:"	
-			str_TK_length:		DC.B	4		
+			str_TK_length:		DC.B	4	
 			str_TC:				DC.B 	" T,C:"	
 			str_TC_length:		DC.B	5		
 			
@@ -2081,8 +2082,8 @@ mainloop_prompt_wait:
 			LDX		#04
 			MUL		; X:A <- (X) * (A)
 			
-			; load addr of adc_data to HX 
-			LDHX	adc_data_0 
+			; load upper byte of adc_data to HX 
+			LDHX	adc_data_0
 			
 			; move result of n*4 to X
 			PSHA
@@ -2114,12 +2115,39 @@ mainloop_write_external:
 			JSR		lcd_clear
 
 ;*** write external temp in K
+
 			; write "T,K:" to the LCD 
 			LDHX	#str_TK
 			LDA		str_TK_length
 			JSR		lcd_str	
 			
+			
+			; temp >= 27 C == 300 K?
 			LDA		temp
+			CMP		#$1B
+			BLO		mainloop_k_small
+			
+mainloop_k_big:
+			; convert to K
+			SUB		#$1B
+			STA		temp_k
+			
+			; write 3 for 300K
+			LDA		#'3'
+			JSR		lcd_char
+			BRA		mainloop_k
+			
+mainloop_k_small:
+			; convert to K
+			ADD		#$49
+			STA		temp_k
+			
+			; write 2 for 200K
+			LDA		#'2'
+			JSR		lcd_char
+
+mainloop_k:
+			LDA		temp_k
 
 			; write upper number to LCD
 			LDHX	#$000A
@@ -2143,10 +2171,33 @@ mainloop_write_external:
 			
 			
 ;*** write external temp in C
+
 			; write " T,C:" to the LCD 
 			LDHX	#str_TC
 			LDA		str_TC_length
 			JSR		lcd_str	
+			
+			LDA		temp
+
+			; write upper number to LCD
+			LDHX	#$000A
+			DIV						; A <= (H:A)/(X), H <= (remainder)
+			
+			; convert to ASCII char
+			JSR		lcd_num_to_char
+			
+			; write to LCD
+			JSR		lcd_char
+			
+			; move remainder from H to A
+			PSHH
+			PULA
+			
+			; convert to ASCII char
+			JSR		lcd_num_to_char
+			
+			; write to LCD
+			JSR		lcd_char
 			
 
 ;*** wait for '*' key press
