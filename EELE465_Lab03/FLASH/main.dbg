@@ -1978,6 +1978,8 @@ feed_watchdog: MACRO
             XREF keypad_interpret, keypad_scan, keypad_data_0, keypad_data_1
             XREF lcd_init, lcd_write, lcd_char, lcd_str, lcd_num_to_char, lcd_clear, lcd_goto_row0, lcd_goto_row1, lcd_data, lcd_char_data, lcd_col_idx
             XREF adc_init, adc_read_ch26_avg, adc_read_ch2_avg, adc_read_avg, adc_data_0, adc_data_1
+            XREF math_mul_16, math_div_32
+            XREF INTACC1, INTACC2
 
 
 ; variable/data section
@@ -2125,9 +2127,9 @@ mainloop_write_external:
 			; temp >= 27 C == 300 K?
 			LDA		temp
 			CMP		#$1B
-			BLO		mainloop_k_small
+			BLO		mainloop_external_k_small
 			
-mainloop_k_big:
+mainloop_external_k_big:
 			; convert to K
 			SUB		#$1B
 			STA		temp_k
@@ -2135,9 +2137,9 @@ mainloop_k_big:
 			; write 3 for 300K
 			LDA		#'3'
 			JSR		lcd_char
-			BRA		mainloop_k
+			BRA		mainloop_external_k
 			
-mainloop_k_small:
+mainloop_external_k_small:
 			; convert to K
 			ADD		#$49
 			STA		temp_k
@@ -2146,7 +2148,7 @@ mainloop_k_small:
 			LDA		#'2'
 			JSR		lcd_char
 
-mainloop_k:
+mainloop_external_k:
 			LDA		temp_k
 
 			; write upper number to LCD
@@ -2200,6 +2202,61 @@ mainloop_k:
 			JSR		lcd_char
 			
 
+;*** do math external temp sensor data
+
+			; multiply adc result by slope (19)
+			LDA		adc_data_0
+			STA		INTACC1
+			LDA		adc_data_1
+			STA		INTACC1+1
+			
+			LDA		#$00
+			STA		INTACC2
+			LDA		#$13
+			STA		INTACC2+1
+			
+			JSR		math_mul_16
+			
+			; move result to lower bytes of INTACC1
+			LDA		INTACC1
+			STA		INTACC1+2
+			LDA		INTACC1+1
+			STA		INTACC1+3
+			
+			LDA		#$00
+			STA		INTACC1
+			STA		INTACC1+1
+			
+			; multiply n*10 (slope and averaging) 
+			LDA		num_samples
+			LDX		#$0A
+			MUL		; X:A <- (X) * (A)
+			
+			; move result of n*10 to INTACC2
+			STA		INTACC2+1
+			PSHX
+			PULA
+			STA		INTACC2
+			
+			; divide INTACC1 (adc_data*19) by INTACC2 (n*10)
+			JSR		math_div_32
+
+			; save result in temp
+			STA		temp
+			
+			; subtract result from offset $93
+			LDA		#$93
+			SUB		temp
+			STA		temp
+
+; make sure value less than 99
+			CMP		#$63
+			;BLO		mainloop_write_internal
+			LDA		#$63	
+			STA		temp			
+
+
+
 ;*** wait for '*' key press
 mainloop_end:
 
@@ -2221,6 +2278,13 @@ mainloop_end:
             
             ; keep waiting for '*' key
             BRA    	mainloop_end
+            
+            
+;*** do all the same stuff again for the internal temp sensor
+
+			;*** read internal temp sensor n times
+			LDA		num_samples
+			JSR		adc_read_ch26_avg
             
 mainloop_restart:
 			JMP		mainLoop

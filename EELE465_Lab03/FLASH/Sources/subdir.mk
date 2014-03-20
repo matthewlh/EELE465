@@ -12,6 +12,7 @@ ASM_SRCS += \
 ../Sources/lcd.asm \
 ../Sources/led.asm \
 ../Sources/main.asm \
+../Sources/math.asm \
 
 ASM_SRCS_QUOTED += \
 "../Sources/adc.asm" \
@@ -20,6 +21,7 @@ ASM_SRCS_QUOTED += \
 "../Sources/lcd.asm" \
 "../Sources/led.asm" \
 "../Sources/main.asm" \
+"../Sources/math.asm" \
 
 OBJS += \
 ./Sources/adc_asm.obj \
@@ -28,6 +30,7 @@ OBJS += \
 ./Sources/lcd_asm.obj \
 ./Sources/led_asm.obj \
 ./Sources/main_asm.obj \
+./Sources/math_asm.obj \
 
 ASM_DEPS += \
 ./Sources/adc_asm.d \
@@ -36,6 +39,7 @@ ASM_DEPS += \
 ./Sources/lcd_asm.d \
 ./Sources/led_asm.d \
 ./Sources/main_asm.d \
+./Sources/math_asm.d \
 
 OBJS_QUOTED += \
 "./Sources/adc_asm.obj" \
@@ -44,6 +48,7 @@ OBJS_QUOTED += \
 "./Sources/lcd_asm.obj" \
 "./Sources/led_asm.obj" \
 "./Sources/main_asm.obj" \
+"./Sources/math_asm.obj" \
 
 ASM_DEPS_QUOTED += \
 "./Sources/adc_asm.d" \
@@ -52,6 +57,7 @@ ASM_DEPS_QUOTED += \
 "./Sources/lcd_asm.d" \
 "./Sources/led_asm.d" \
 "./Sources/main_asm.d" \
+"./Sources/math_asm.d" \
 
 OBJS_OS_FORMAT += \
 ./Sources/adc_asm.obj \
@@ -60,6 +66,7 @@ OBJS_OS_FORMAT += \
 ./Sources/lcd_asm.obj \
 ./Sources/led_asm.obj \
 ./Sources/main_asm.obj \
+./Sources/math_asm.obj \
 
 
 # Each subdirectory must supply rules for building sources it contributes
@@ -113,6 +120,14 @@ Sources/main_asm.obj: ../Sources/main.asm
 	@echo 'Executing target #6 $<'
 	@echo 'Invoking: HCS08 Assembler'
 	"$(HC08ToolsEnv)/ahc08" -ArgFile"Sources/main.args" -Objn"Sources/main_asm.obj" "$<" -Lm="$(@:%.obj=%.d)" -LmCfg=xilmou
+	@echo 'Finished building: $<'
+	@echo ' '
+
+Sources/math_asm.obj: ../Sources/math.asm
+	@echo 'Building file: $<'
+	@echo 'Executing target #7 $<'
+	@echo 'Invoking: HCS08 Assembler'
+	"$(HC08ToolsEnv)/ahc08" -ArgFile"Sources/math.args" -Objn"Sources/math_asm.obj" "$<" -Lm="$(@:%.obj=%.d)" -LmCfg=xilmou
 	@echo 'Finished building: $<'
 	@echo ' '
 

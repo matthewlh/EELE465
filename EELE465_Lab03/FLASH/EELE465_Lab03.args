@@ -7,4 +7,5 @@
 "$(ProjDirPath)/FLASH/Sources/keypad_asm.obj"
 "$(ProjDirPath)/FLASH/Sources/lcd_asm.obj"
 "$(ProjDirPath)/FLASH/Sources/led_asm.obj"
-"$(ProjDirPath)/FLASH/Sources/main_asm.obj" )
+"$(ProjDirPath)/FLASH/Sources/main_asm.obj"
+"$(ProjDirPath)/FLASH/Sources/math_asm.obj" )
