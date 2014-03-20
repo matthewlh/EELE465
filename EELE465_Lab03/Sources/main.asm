@@ -246,7 +246,7 @@ mainloop_external_k:
 			JSR		lcd_char
 			
 
-;*** do math external temp sensor data
+;*** do math internal temp sensor data
 
 			; multiply adc result by slope (19)
 			LDA		adc_data_0
@@ -288,16 +288,108 @@ mainloop_external_k:
 			; save result in temp
 			STA		temp
 			
-			; subtract result from offset $93
-			LDA		#$93
-			SUB		temp
+			; subtract 388 (by truncating to 8-bits and subtracting 138)
+			LDA		INTACC2+1
+			SUB		#$8A 		;=138
 			STA		temp
 
 ; make sure value less than 99
 			CMP		#$63
-			;BLO		mainloop_write_internal
+			BLO		mainloop_write_internal
 			LDA		#$63	
-			STA		temp			
+			STA		temp	
+			
+mainloop_write_internal:
+
+			; clear display
+			JSR		lcd_clear
+			
+			; jump to row 1 of LCD
+			JSR		lcd_goto_row1
+
+;*** write internal temp in K
+
+			; write "T,K:" to the LCD 
+			LDHX	#str_TK
+			LDA		str_TK_length
+			JSR		lcd_str	
+			
+			
+			; temp >= 27 C == 300 K?
+			LDA		temp
+			CMP		#$1B
+			BLO		mainloop_internal_k_small
+			
+mainloop_internal_k_big:
+			; convert to K
+			SUB		#$1B
+			STA		temp_k
+			
+			; write 3 for 300K
+			LDA		#'3'
+			JSR		lcd_char
+			BRA		mainloop_internal_k
+			
+mainloop_internal_k_small:
+			; convert to K
+			ADD		#$49
+			STA		temp_k
+			
+			; write 2 for 200K
+			LDA		#'2'
+			JSR		lcd_char
+
+mainloop_internal_k:
+			LDA		temp_k
+
+			; write upper number to LCD
+			LDHX	#$000A
+			DIV						; A <= (H:A)/(X), H <= (remainder)
+			
+			; convert to ASCII char
+			JSR		lcd_num_to_char
+			
+			; write to LCD
+			JSR		lcd_char
+			
+			; move remainder from H to A
+			PSHH
+			PULA
+			
+			; convert to ASCII char
+			JSR		lcd_num_to_char
+			
+			; write to LCD
+			JSR		lcd_char
+			
+;*** write internal temp in C
+
+			; write " T,C:" to the LCD 
+			LDHX	#str_TC
+			LDA		str_TC_length
+			JSR		lcd_str	
+			
+			LDA		temp
+
+			; write upper number to LCD
+			LDHX	#$000A
+			DIV						; A <= (H:A)/(X), H <= (remainder)
+			
+			; convert to ASCII char
+			JSR		lcd_num_to_char
+			
+			; write to LCD
+			JSR		lcd_char
+			
+			; move remainder from H to A
+			PSHH
+			PULA
+			
+			; convert to ASCII char
+			JSR		lcd_num_to_char
+			
+			; write to LCD
+			JSR		lcd_char			
 
 
 
