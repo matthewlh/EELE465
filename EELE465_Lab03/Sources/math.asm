@@ -130,10 +130,9 @@ DIVISOR 	EQU INTACC2
 QUOTIENT 	EQU INTACC1
 REMAINDER 	EQU INTACC1
 
-;*** preserve registers
-			PSHA
-			PSHX
-			PSHH
+			PSHH ;save h-reg value
+			PSHA ;save accumulator
+			PSHX ;save x-reg value
 			
 			; reserve 3 bytes on the stack and zero
 			AIS #-3 			;reserve three bytes of temp storage
@@ -148,93 +147,71 @@ REMAINDER 	EQU INTACC1
 * both bytes of the temporary remainder location
 *
 			
-			LDA 	DIVIDEND+1 	;shift dividend LSB
-			STA		DIVIDEND+3
-			LDA 	DIVIDEND 	;shift 2nd byte of dividend
-			STA		DIVIDEND+2
-			LDA 	DIVIDEND-1 	;shift 3rd byte of dividend
-			STA		DIVIDEND+1
-			LDA 	DIVIDEND-2 	;shift dividend MSB
-			STA		DIVIDEND
-			LDA		#$00
-			STA 	REMAINDER 	;zero remainder MSB
-			STA 	REMAINDER+1 ;zero remainder LSB
+			MOV DIVIDEND+1,DIVIDEND+3 ;shift dividend LSB
+			MOV DIVIDEND,DIVIDEND+2 ;shift 2nd byte of dividend
+			MOV DIVIDEND-1,DIVIDEND+1 ;shift 3rd byte of dividend
+			MOV DIVIDEND-2,DIVIDEND ;shift dividend MSB
+			CLR REMAINDER ;zero remainder MSB
+			CLR REMAINDER+1 ;zero remainder LSB
 			
 *
 * Shift each byte of dividend and remainder one bit to the left
 *
 SHFTLP:
 			LDA 	REMAINDER 		;get remainder MSB
-			ROLA 					;shift remainder MSB into carry
-			
-			LDA 	DIVIDEND+3 		;shift dividend LSB
-			ROLA
-			STA		DIVIDEND+3
-			
-			LDA 	DIVIDEND+2 	;shift 2nd byte of dividend
-			ROLA
-			STA		DIVIDEND+2
-			
-			LDA 	DIVIDEND+1 	;shift 3rd byte of dividend
-			ROLA	
-			STA		DIVIDEND+1
-			
-			LDA 	DIVIDEND 		;shift dividend MSB
-			ROLA
-			STA		DIVIDEND
-			
-			LDA 	REMAINDER+1 	;shift remainder LSB
-			ROLA
-			STA		REMAINDER+1 
-			
-			LDA 	REMAINDER 		;shift remainder MSB
-			ROLA
-			STA		REMAINDER 
+			ROLA ;shift remainder MSB into carry
+			ROL DIVIDEND+3 ;shift dividend LSB
+			ROL DIVIDEND+2 ;shift 2nd byte of dividend
+			ROL DIVIDEND+1 ;shift 3rd byte of dividend
+			ROL DIVIDEND ;shift dividend MSB
+			ROL REMAINDER+1 ;shift remainder LSB
+			ROL REMAINDER ;shift remainder MSB
 *			
 * Subtract both bytes of the divisor from the remainder
 *
-			LDA 	REMAINDER+1 ;get remainder LSB
-			SUB 	2,SP 		;subtract divisor LSB from remainder LSB
-			STA 	REMAINDER+1 ;store new remainder LSB
-			LDA 	REMAINDER 	;get remainder MSB
-			SBC 	1,SP 		;subtract divisor MSB from remainder MSB
-			STA 	REMAINDER 	;store new remainder MSB
-			LDA 	DIVIDEND+3 	;get low byte of dividend/quotient
-			SBC 	#0 			;dividend low bit holds subtract carry
-			STA 	DIVIDEND+3 	;store low byte of dividend/quotient
+			LDA REMAINDER+1 ;get remainder LSB
+			SUB 2,SP ;subtract divisor LSB from remainder LSB
+			STA REMAINDER+1 ;store new remainder LSB
+			LDA REMAINDER ;get remainder MSB
+			SBC 1,SP ;subtract divisor MSB from remainder MSB
+			STA REMAINDER ;store new remainder MSB
+			LDA DIVIDEND+3 ;get low byte of dividend/quotient
+			SBC #0 ;dividend low bit holds subtract carry
+			STA DIVIDEND+3 ;store low byte of dividend/quotient
 *
 * Check dividend/quotient LSB. If clear, set LSB of quotient to indicate
 * successful subraction, else add both bytes of divisor back to remainder
 *
-			BRCLR 	0,DIVIDEND+3,SETLSB 	;check for a carry from subtraction and add divisor to remainder if set
-			LDA 	REMAINDER+1 	;get remainder LSB
-			ADD 	2,SP 			;add divisor LSB to remainder LSB
-			STA 	REMAINDER+1 	;store remainder LSB
-			LDA 	REMAINDER 		;get remainder MSB
-			ADC 	1,SP 			;add divisor MSB to remainder MSB
-			STA 	REMAINDER 		;store remainder MSB
-			LDA 	DIVIDEND+3 		;get low byte of dividend
-			ADC 	#0 				;add carry to low bit of dividend
-			STA 	DIVIDEND+3 		;store low byte of dividend
-			BRA 	DECRMT 			;do next shift and subtract
+			BRCLR 0,DIVIDEND+3,SETLSB ;check for a carry from subtraction
+			;and add divisor to remainder if set
+			LDA REMAINDER+1 ;get remainder LSB
+			ADD 2,SP ;add divisor LSB to remainder LSB
+			STA REMAINDER+1 ;store remainder LSB
+			LDA REMAINDER ;get remainder MSB
+			ADC 1,SP ;add divisor MSB to remainder MSB
+			STA REMAINDER ;store remainder MSB
+			LDA DIVIDEND+3 ;get low byte of dividend
+			ADC #0 ;add carry to low bit of dividend
+			STA DIVIDEND+3 ;store low byte of dividend
+			BRA DECRMT ;do next shift and subtract
 SETLSB:		BSET 	0,DIVIDEND+3 	;set LSB of quotient to indicate successive subtraction
 DECRMT:		DBNZ 	3,SP,SHFTLP 	;decrement loop counter and do next shift
 *
 * Move 32-bit dividend into INTACC1:INTACC1+3 and put 16-bit
 * remainder in INTACC2:INTACC2+1
 *
-			LDA 	REMAINDER 	;get remainder MSB
-			STA 	1,SP 		;temporarily store remainder MSB
-			LDA 	REMAINDER+1 ;get remainder LSB
-			STA 	2,SP 		;temporarily store remainder LSB
-			MOV 	DIVIDEND,QUOTIENT 		;
-			MOV 	DIVIDEND+1,QUOTIENT+1 	;shift all four bytes of quotient
-			MOV 	DIVIDEND+2,QUOTIENT+2 	; 16 bits to the left
-			MOV 	DIVIDEND+3,QUOTIENT+3 	;
-			LDA 	1,SP 		;get final remainder MSB
-			STA 	INTACC2 	;store final remainder MSB
-			LDA 	2,SP 		;get final remainder LSB
-			STA 	INTACC2+1 	;store final remainder LSB
+			LDA REMAINDER ;get remainder MSB
+			STA 1,SP ;temporarily store remainder MSB
+			LDA REMAINDER+1 ;get remainder LSB
+			STA 2,SP ;temporarily store remainder LSB
+			MOV DIVIDEND,QUOTIENT ;
+			MOV DIVIDEND+1,QUOTIENT+1 ;shift all four bytes of quotient
+			MOV DIVIDEND+2,QUOTIENT+2 ; 16 bits to the left
+			MOV DIVIDEND+3,QUOTIENT+3 ;
+			LDA 1,SP ;get final remainder MSB
+			STA INTACC2 ;store final remainder MSB
+			LDA 2,SP ;get final remainder LSB
+			STA INTACC2+1 ;store final remainder LSB
 *
 * Deallocate local storage, restore register values, and return from
 * subroutine

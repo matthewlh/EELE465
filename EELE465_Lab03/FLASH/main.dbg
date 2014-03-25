@@ -2040,6 +2040,29 @@ _Startup:
 			
 
 mainLoop:
+			LDA		#$00
+			STA		INTACC1
+			LDA		#$00
+			STA		INTACC1+1
+			LDA		#$00
+			STA		INTACC1+2
+			LDA		#$0A
+			STA		INTACC1+3
+			
+			LDA		#$00
+			STA		INTACC2
+			LDA		#$01
+			STA		INTACC2+1
+			LDA		#$00
+			STA		INTACC2+2
+			LDA		#$00
+			STA		INTACC2+3
+
+			JSR		math_div_32
+			
+			BRA		mainLoop
+
+
 ;*** reset to start
 			; clear vars 
 			
@@ -2202,7 +2225,15 @@ mainloop_external_k:
 			JSR		lcd_char
 			
 
-;*** do math external temp sensor data
+            
+            
+;*** do all the same stuff again for the internal temp sensor
+
+			;*** read internal temp sensor n times
+			LDA		num_samples
+			JSR		adc_read_ch26_avg
+
+;*** do math internal temp sensor data
 
 			; multiply adc result by slope (19)
 			LDA		adc_data_0
@@ -2217,16 +2248,6 @@ mainloop_external_k:
 			
 			JSR		math_mul_16
 			
-			; move result to lower bytes of INTACC1
-			LDA		INTACC1
-			STA		INTACC1+2
-			LDA		INTACC1+1
-			STA		INTACC1+3
-			
-			LDA		#$00
-			STA		INTACC1
-			STA		INTACC1+1
-			
 			; multiply n*10 (slope and averaging) 
 			LDA		num_samples
 			LDX		#$0A
@@ -2238,22 +2259,116 @@ mainloop_external_k:
 			PULA
 			STA		INTACC2
 			
+			LDA		#$00
+			STA		INTACC2
+			STA		INTACC2+1
+			STA		INTACC2+2
+			STA		INTACC2+3
+			LDA		#$0A
+			STA		INTACC2+1
+			
 			; divide INTACC1 (adc_data*19) by INTACC2 (n*10)
 			JSR		math_div_32
-
-			; save result in temp
-			STA		temp
 			
-			; subtract result from offset $93
-			LDA		#$93
-			SUB		temp
+			; subtract 388 (by truncating to 8-bits and subtracting 138)
+			LDA		INTACC2+1
+			SUB		#$8A 		;=138
 			STA		temp
 
 ; make sure value less than 99
 			CMP		#$63
-			;BLO		mainloop_write_internal
+			BLO		mainloop_write_internal
 			LDA		#$63	
-			STA		temp			
+			STA		temp	
+			
+mainloop_write_internal:
+			
+			; jump to row 1 of LCD
+			JSR		lcd_goto_row1
+
+;*** write internal temp in K
+
+			; write "T,K:" to the LCD 
+			LDHX	#str_TK
+			LDA		str_TK_length
+			JSR		lcd_str	
+			
+			
+			; temp >= 27 C == 300 K?
+			LDA		temp
+			CMP		#$1B
+			BLO		mainloop_internal_k_small
+			
+mainloop_internal_k_big:
+			; convert to K
+			SUB		#$1B
+			STA		temp_k
+			
+			; write 3 for 300K
+			LDA		#'3'
+			JSR		lcd_char
+			BRA		mainloop_internal_k
+			
+mainloop_internal_k_small:
+			; convert to K
+			ADD		#$49
+			STA		temp_k
+			
+			; write 2 for 200K
+			LDA		#'2'
+			JSR		lcd_char
+
+mainloop_internal_k:
+			LDA		temp_k
+
+			; write upper number to LCD
+			LDHX	#$000A
+			DIV						; A <= (H:A)/(X), H <= (remainder)
+			
+			; convert to ASCII char
+			JSR		lcd_num_to_char
+			
+			; write to LCD
+			JSR		lcd_char
+			
+			; move remainder from H to A
+			PSHH
+			PULA
+			
+			; convert to ASCII char
+			JSR		lcd_num_to_char
+			
+			; write to LCD
+			JSR		lcd_char
+			
+;*** write internal temp in C
+
+			; write " T,C:" to the LCD 
+			LDHX	#str_TC
+			LDA		str_TC_length
+			JSR		lcd_str	
+			
+			LDA		temp
+
+			; write upper number to LCD
+			LDHX	#$000A
+			DIV						; A <= (H:A)/(X), H <= (remainder)
+			
+			; convert to ASCII char
+			JSR		lcd_num_to_char
+			
+			; write to LCD
+			JSR		lcd_char
+			
+			; move remainder from H to A
+			PSHH
+			PULA
+			
+			; convert to ASCII char
+			JSR		lcd_num_to_char
+			
+			; write to LCD
+			JSR		lcd_char			
 
 
 
@@ -2278,13 +2393,6 @@ mainloop_end:
             
             ; keep waiting for '*' key
             BRA    	mainloop_end
-            
-            
-;*** do all the same stuff again for the internal temp sensor
-
-			;*** read internal temp sensor n times
-			LDA		num_samples
-			JSR		adc_read_ch26_avg
             
 mainloop_restart:
 			JMP		mainLoop

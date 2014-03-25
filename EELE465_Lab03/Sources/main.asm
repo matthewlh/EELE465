@@ -85,6 +85,29 @@ _Startup:
 			
 
 mainLoop:
+			LDA		#$00
+			STA		INTACC1
+			LDA		#$00
+			STA		INTACC1+1
+			LDA		#$00
+			STA		INTACC1+2
+			LDA		#$0A
+			STA		INTACC1+3
+			
+			LDA		#$00
+			STA		INTACC2
+			LDA		#$01
+			STA		INTACC2+1
+			LDA		#$00
+			STA		INTACC2+2
+			LDA		#$00
+			STA		INTACC2+3
+
+			JSR		math_div_32
+			
+			BRA		mainLoop
+
+
 ;*** reset to start
 			; clear vars 
 			
@@ -285,7 +308,7 @@ mainloop_external_k:
 			STA		INTACC2+1
 			STA		INTACC2+2
 			STA		INTACC2+3
-			LDA		#$02
+			LDA		#$0A
 			STA		INTACC2+1
 			
 			; divide INTACC1 (adc_data*19) by INTACC2 (n*10)
