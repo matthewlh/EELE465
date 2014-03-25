@@ -246,6 +246,14 @@ mainloop_external_k:
 			JSR		lcd_char
 			
 
+            
+            
+;*** do all the same stuff again for the internal temp sensor
+
+			;*** read internal temp sensor n times
+			LDA		num_samples
+			JSR		adc_read_ch26_avg
+
 ;*** do math internal temp sensor data
 
 			; multiply adc result by slope (19)
@@ -261,16 +269,6 @@ mainloop_external_k:
 			
 			JSR		math_mul_16
 			
-			; move result to lower bytes of INTACC1
-			LDA		INTACC1
-			STA		INTACC1+2
-			LDA		INTACC1+1
-			STA		INTACC1+3
-			
-			LDA		#$00
-			STA		INTACC1
-			STA		INTACC1+1
-			
 			; multiply n*10 (slope and averaging) 
 			LDA		num_samples
 			LDX		#$0A
@@ -282,11 +280,16 @@ mainloop_external_k:
 			PULA
 			STA		INTACC2
 			
+			LDA		#$00
+			STA		INTACC2
+			STA		INTACC2+1
+			STA		INTACC2+2
+			STA		INTACC2+3
+			LDA		#$02
+			STA		INTACC2+1
+			
 			; divide INTACC1 (adc_data*19) by INTACC2 (n*10)
 			JSR		math_div_32
-
-			; save result in temp
-			STA		temp
 			
 			; subtract 388 (by truncating to 8-bits and subtracting 138)
 			LDA		INTACC2+1
@@ -300,9 +303,6 @@ mainloop_external_k:
 			STA		temp	
 			
 mainloop_write_internal:
-
-			; clear display
-			JSR		lcd_clear
 			
 			; jump to row 1 of LCD
 			JSR		lcd_goto_row1
@@ -413,13 +413,6 @@ mainloop_end:
             
             ; keep waiting for '*' key
             BRA    	mainloop_end
-            
-            
-;*** do all the same stuff again for the internal temp sensor
-
-			;*** read internal temp sensor n times
-			LDA		num_samples
-			JSR		adc_read_ch26_avg
             
 mainloop_restart:
 			JMP		mainLoop

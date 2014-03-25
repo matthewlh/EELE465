@@ -121,7 +121,7 @@ NOINCB:
 ;* 
 ;* Registers Modified: None
 ;* Entry Variables: INTACC1, INTACC1
-;* Exit Variables: INTACC19
+;* Exit Variables: INTACC2
 ;**************************************************************
 math_div_32:
 
@@ -136,25 +136,29 @@ REMAINDER 	EQU INTACC1
 			PSHH
 			
 			; reserve 3 bytes on the stack and zero
-			AIS		#-3
-			CLR		6, SP
-			
-			LDA 	#!32
-			STA 	3,SP 		;loop counter for number of shifts
-			LDA 	DIVISOR 	;get divisor MSB
-			STA 	1,SP 		;put divisor MSB in working storage
-			LDA 	DIVISOR+1	;get divisor LSB
-			STA 	2,SP		;put divisor LSB in working storage
+			AIS #-3 			;reserve three bytes of temp storage
+			LDA #!32 			;
+			STA 3,SP 			;loop counter for number of shifts
+			LDA DIVISOR 		;get divisor MSB
+			STA 1,SP 			;put divisor MSB in working storage
+			LDA DIVISOR+1 		;get divisor LSB
+			STA 2,SP 			;put divisor LSB in working storage
 *
 * Shift all four bytes of dividend 16 bits to the right and clear
 * both bytes of the temporary remainder location
 *
-			MOV 	DIVIDEND+1,DIVIDEND+3 	;shift dividend LSB
-			MOV 	DIVIDEND,DIVIDEND+2 	;shift 2nd byte of dividend
-			MOV 	DIVIDEND-1,DIVIDEND+1 	;shift 3rd byte of dividend
-			MOV 	DIVIDEND-2,DIVIDEND 	;shift dividend MSB
-			CLR 	REMAINDER 				;zero remainder MSB
-			CLR 	REMAINDER+1 			;zero remainder LSB
+			
+			LDA 	DIVIDEND+1 	;shift dividend LSB
+			STA		DIVIDEND+3
+			LDA 	DIVIDEND 	;shift 2nd byte of dividend
+			STA		DIVIDEND+2
+			LDA 	DIVIDEND-1 	;shift 3rd byte of dividend
+			STA		DIVIDEND+1
+			LDA 	DIVIDEND-2 	;shift dividend MSB
+			STA		DIVIDEND
+			LDA		#$00
+			STA 	REMAINDER 	;zero remainder MSB
+			STA 	REMAINDER+1 ;zero remainder LSB
 			
 *
 * Shift each byte of dividend and remainder one bit to the left
@@ -162,12 +166,30 @@ REMAINDER 	EQU INTACC1
 SHFTLP:
 			LDA 	REMAINDER 		;get remainder MSB
 			ROLA 					;shift remainder MSB into carry
-			ROL 	DIVIDEND+3 	;shift dividend LSB
-			ROL 	DIVIDEND+2 	;shift 2nd byte of dividend
-			ROL 	DIVIDEND+1 	;shift 3rd byte of dividend
-			ROL 	DIVIDEND 		;shift dividend MSB
-			ROL 	REMAINDER+1 	;shift remainder LSB
-			ROL 	REMAINDER 		;shift remainder MSB
+			
+			LDA 	DIVIDEND+3 		;shift dividend LSB
+			ROLA
+			STA		DIVIDEND+3
+			
+			LDA 	DIVIDEND+2 	;shift 2nd byte of dividend
+			ROLA
+			STA		DIVIDEND+2
+			
+			LDA 	DIVIDEND+1 	;shift 3rd byte of dividend
+			ROLA	
+			STA		DIVIDEND+1
+			
+			LDA 	DIVIDEND 		;shift dividend MSB
+			ROLA
+			STA		DIVIDEND
+			
+			LDA 	REMAINDER+1 	;shift remainder LSB
+			ROLA
+			STA		REMAINDER+1 
+			
+			LDA 	REMAINDER 		;shift remainder MSB
+			ROLA
+			STA		REMAINDER 
 *			
 * Subtract both bytes of the divisor from the remainder
 *
