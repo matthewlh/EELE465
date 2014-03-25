@@ -17,7 +17,7 @@
             INCLUDE 'MC9S08QG8.inc'
             
 ; export symbols
-            XDEF math_mul_16, math_div_32
+            XDEF math_mul_16;, math_div_32
             XDEF INTACC1, INTACC2
             
 ; import symbols
@@ -118,12 +118,14 @@ NOINCB:
 ;* Subroutine Name: math_div_32  
 ;* Description: Performs a 32x16 bit division of  
 ;*				INTACC1 by INTACC2
+;*
+;*				*** DOES NOT WORK ***
 ;* 
 ;* Registers Modified: None
 ;* Entry Variables: INTACC1, INTACC1
 ;* Exit Variables: INTACC2
 ;**************************************************************
-math_div_32:
+;math_div_32:
 
 DIVIDEND 	EQU INTACC1+2
 DIVISOR 	EQU INTACC2
