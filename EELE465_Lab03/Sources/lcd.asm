@@ -433,7 +433,7 @@ lcd_clear:
 lcd_goto_row0:
 
 			; go back to first column and row of LCD
-			LDA		#$0C
+			LDA		#$08
 			JSR		lcd_write
 			LDA		#$00
 			JSR		lcd_write
@@ -452,7 +452,7 @@ lcd_goto_row0:
 lcd_goto_row1:
 
 			; go back to first column and row of LCD
-			LDA		#$04
+			LDA		#$0C
 			JSR		lcd_write
 			LDA		#$00
 			JSR		lcd_write
