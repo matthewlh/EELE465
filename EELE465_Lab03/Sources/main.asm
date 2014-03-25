@@ -258,9 +258,11 @@ mainloop_external_k:
 			LDA		adc_data_1
 			LDX		num_samples
 			DIV						; A <= (H:A)/(X), H <= (remainder)
+			STA		temp
 			
-			; subtract offset 205
-			SUB		#$CD
+			; subtract from 230
+			LDA		#$E6
+			SUB		temp
 			
 			; multiply by slope 2
 			LDX		#$02
