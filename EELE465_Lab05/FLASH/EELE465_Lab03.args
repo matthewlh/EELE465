@@ -4,6 +4,7 @@
 -WmsgFob"%f%e:%l:%k:%d %m\n" 
 -Add("$(ProjDirPath)/FLASH/Sources/adc_asm.obj"
 "$(ProjDirPath)/FLASH/Sources/bus_asm.obj"
+"$(ProjDirPath)/FLASH/Sources/i2c_driver_asm.obj"
 "$(ProjDirPath)/FLASH/Sources/keypad_asm.obj"
 "$(ProjDirPath)/FLASH/Sources/lcd_asm.obj"
 "$(ProjDirPath)/FLASH/Sources/led_asm.obj"

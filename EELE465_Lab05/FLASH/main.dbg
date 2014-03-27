@@ -1978,7 +1978,7 @@ feed_watchdog: MACRO
             XREF keypad_interpret, keypad_scan, keypad_data_0, keypad_data_1
             XREF lcd_init, lcd_write, lcd_char, lcd_str, lcd_num_to_char, lcd_clear, lcd_goto_row0, lcd_goto_row1, lcd_data, lcd_char_data, lcd_col_idx
             XREF adc_init, adc_read_ch26_avg, adc_read_ch2_avg, adc_read_avg, adc_data_0, adc_data_1
-            XREF math_mul_16, math_div_32
+            XREF math_mul_16
             XREF INTACC1, INTACC2
 
 
@@ -2038,34 +2038,8 @@ _Startup:
             
 			CLI			; enable interrupts
 			
-
 mainLoop:
-			LDA		#$00
-			STA		INTACC1
-			LDA		#$00
-			STA		INTACC1+1
-			LDA		#$00
-			STA		INTACC1+2
-			LDA		#$0A
-			STA		INTACC1+3
-			
-			LDA		#$00
-			STA		INTACC2
-			LDA		#$01
-			STA		INTACC2+1
-			LDA		#$00
-			STA		INTACC2+2
-			LDA		#$00
-			STA		INTACC2+3
-
-			JSR		math_div_32
-			
-			BRA		mainLoop
-
-
 ;*** reset to start
-			; clear vars 
-			
 			
 			; clear display
 			JSR		lcd_clear
@@ -2233,46 +2207,24 @@ mainloop_external_k:
 			LDA		num_samples
 			JSR		adc_read_ch26_avg
 
-;*** do math internal temp sensor data
+;*** do math on internal temp sensor data
 
-			; multiply adc result by slope (19)
-			LDA		adc_data_0
-			STA		INTACC1
+			; divide adc_data by n
+			LDHX	adc_data_0
 			LDA		adc_data_1
-			STA		INTACC1+1
+			LDX		num_samples
+			DIV						; A <= (H:A)/(X), H <= (remainder)
+			STA		temp
 			
-			LDA		#$00
-			STA		INTACC2
-			LDA		#$13
-			STA		INTACC2+1
+			; subtract from 230
+			LDA		#$E6
+			SUB		temp
 			
-			JSR		math_mul_16
+			; multiply by slope 2
+			LDX		#$02
+			MUL
 			
-			; multiply n*10 (slope and averaging) 
-			LDA		num_samples
-			LDX		#$0A
-			MUL		; X:A <- (X) * (A)
-			
-			; move result of n*10 to INTACC2
-			STA		INTACC2+1
-			PSHX
-			PULA
-			STA		INTACC2
-			
-			LDA		#$00
-			STA		INTACC2
-			STA		INTACC2+1
-			STA		INTACC2+2
-			STA		INTACC2+3
-			LDA		#$0A
-			STA		INTACC2+1
-			
-			; divide INTACC1 (adc_data*19) by INTACC2 (n*10)
-			JSR		math_div_32
-			
-			; subtract 388 (by truncating to 8-bits and subtracting 138)
-			LDA		INTACC2+1
-			SUB		#$8A 		;=138
+			;save result
 			STA		temp
 
 ; make sure value less than 99

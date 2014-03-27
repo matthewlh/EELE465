@@ -8,6 +8,7 @@
 ASM_SRCS += \
 ../Sources/adc.asm \
 ../Sources/bus.asm \
+../Sources/i2c_driver.asm \
 ../Sources/keypad.asm \
 ../Sources/lcd.asm \
 ../Sources/led.asm \
@@ -17,6 +18,7 @@ ASM_SRCS += \
 ASM_SRCS_QUOTED += \
 "../Sources/adc.asm" \
 "../Sources/bus.asm" \
+"../Sources/i2c_driver.asm" \
 "../Sources/keypad.asm" \
 "../Sources/lcd.asm" \
 "../Sources/led.asm" \
@@ -26,6 +28,7 @@ ASM_SRCS_QUOTED += \
 OBJS += \
 ./Sources/adc_asm.obj \
 ./Sources/bus_asm.obj \
+./Sources/i2c_driver_asm.obj \
 ./Sources/keypad_asm.obj \
 ./Sources/lcd_asm.obj \
 ./Sources/led_asm.obj \
@@ -35,6 +38,7 @@ OBJS += \
 ASM_DEPS += \
 ./Sources/adc_asm.d \
 ./Sources/bus_asm.d \
+./Sources/i2c_driver_asm.d \
 ./Sources/keypad_asm.d \
 ./Sources/lcd_asm.d \
 ./Sources/led_asm.d \
@@ -44,6 +48,7 @@ ASM_DEPS += \
 OBJS_QUOTED += \
 "./Sources/adc_asm.obj" \
 "./Sources/bus_asm.obj" \
+"./Sources/i2c_driver_asm.obj" \
 "./Sources/keypad_asm.obj" \
 "./Sources/lcd_asm.obj" \
 "./Sources/led_asm.obj" \
@@ -53,6 +58,7 @@ OBJS_QUOTED += \
 ASM_DEPS_QUOTED += \
 "./Sources/adc_asm.d" \
 "./Sources/bus_asm.d" \
+"./Sources/i2c_driver_asm.d" \
 "./Sources/keypad_asm.d" \
 "./Sources/lcd_asm.d" \
 "./Sources/led_asm.d" \
@@ -62,6 +68,7 @@ ASM_DEPS_QUOTED += \
 OBJS_OS_FORMAT += \
 ./Sources/adc_asm.obj \
 ./Sources/bus_asm.obj \
+./Sources/i2c_driver_asm.obj \
 ./Sources/keypad_asm.obj \
 ./Sources/lcd_asm.obj \
 ./Sources/led_asm.obj \
@@ -91,9 +98,17 @@ Sources/bus_asm.obj: ../Sources/bus.asm
 	@echo 'Finished building: $<'
 	@echo ' '
 
-Sources/keypad_asm.obj: ../Sources/keypad.asm
+Sources/i2c_driver_asm.obj: ../Sources/i2c_driver.asm
 	@echo 'Building file: $<'
 	@echo 'Executing target #3 $<'
+	@echo 'Invoking: HCS08 Assembler'
+	"$(HC08ToolsEnv)/ahc08" -ArgFile"Sources/i2c_driver.args" -Objn"Sources/i2c_driver_asm.obj" "$<" -Lm="$(@:%.obj=%.d)" -LmCfg=xilmou
+	@echo 'Finished building: $<'
+	@echo ' '
+
+Sources/keypad_asm.obj: ../Sources/keypad.asm
+	@echo 'Building file: $<'
+	@echo 'Executing target #4 $<'
 	@echo 'Invoking: HCS08 Assembler'
 	"$(HC08ToolsEnv)/ahc08" -ArgFile"Sources/keypad.args" -Objn"Sources/keypad_asm.obj" "$<" -Lm="$(@:%.obj=%.d)" -LmCfg=xilmou
 	@echo 'Finished building: $<'
@@ -101,7 +116,7 @@ Sources/keypad_asm.obj: ../Sources/keypad.asm
 
 Sources/lcd_asm.obj: ../Sources/lcd.asm
 	@echo 'Building file: $<'
-	@echo 'Executing target #4 $<'
+	@echo 'Executing target #5 $<'
 	@echo 'Invoking: HCS08 Assembler'
 	"$(HC08ToolsEnv)/ahc08" -ArgFile"Sources/lcd.args" -Objn"Sources/lcd_asm.obj" "$<" -Lm="$(@:%.obj=%.d)" -LmCfg=xilmou
 	@echo 'Finished building: $<'
@@ -109,7 +124,7 @@ Sources/lcd_asm.obj: ../Sources/lcd.asm
 
 Sources/led_asm.obj: ../Sources/led.asm
 	@echo 'Building file: $<'
-	@echo 'Executing target #5 $<'
+	@echo 'Executing target #6 $<'
 	@echo 'Invoking: HCS08 Assembler'
 	"$(HC08ToolsEnv)/ahc08" -ArgFile"Sources/led.args" -Objn"Sources/led_asm.obj" "$<" -Lm="$(@:%.obj=%.d)" -LmCfg=xilmou
 	@echo 'Finished building: $<'
@@ -117,7 +132,7 @@ Sources/led_asm.obj: ../Sources/led.asm
 
 Sources/main_asm.obj: ../Sources/main.asm
 	@echo 'Building file: $<'
-	@echo 'Executing target #6 $<'
+	@echo 'Executing target #7 $<'
 	@echo 'Invoking: HCS08 Assembler'
 	"$(HC08ToolsEnv)/ahc08" -ArgFile"Sources/main.args" -Objn"Sources/main_asm.obj" "$<" -Lm="$(@:%.obj=%.d)" -LmCfg=xilmou
 	@echo 'Finished building: $<'
@@ -125,7 +140,7 @@ Sources/main_asm.obj: ../Sources/main.asm
 
 Sources/math_asm.obj: ../Sources/math.asm
 	@echo 'Building file: $<'
-	@echo 'Executing target #7 $<'
+	@echo 'Executing target #8 $<'
 	@echo 'Invoking: HCS08 Assembler'
 	"$(HC08ToolsEnv)/ahc08" -ArgFile"Sources/math.args" -Objn"Sources/math_asm.obj" "$<" -Lm="$(@:%.obj=%.d)" -LmCfg=xilmou
 	@echo 'Finished building: $<'

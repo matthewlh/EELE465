@@ -23,7 +23,7 @@
             XREF keypad_interpret, keypad_scan, keypad_data_0, keypad_data_1
             XREF lcd_init, lcd_write, lcd_char, lcd_str, lcd_num_to_char, lcd_clear, lcd_goto_row0, lcd_goto_row1, lcd_data, lcd_char_data, lcd_col_idx
             XREF adc_init, adc_read_ch26_avg, adc_read_ch2_avg, adc_read_avg, adc_data_0, adc_data_1
-            XREF math_mul_16;, math_div_32
+            XREF math_mul_16
             XREF INTACC1, INTACC2
 
 
