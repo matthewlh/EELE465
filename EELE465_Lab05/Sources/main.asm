@@ -25,7 +25,7 @@
             XREF adc_init, adc_read_ch26_avg, adc_read_ch2_avg, adc_read_avg, adc_data_0, adc_data_1
             XREF math_mul_16
             XREF INTACC1, INTACC2
-            XREF i2c_init, i2c_start, i2c_stop, i2c_tx_byte
+            XREF i2c_init, i2c_start, i2c_stop, i2c_tx_byte, i2c_rx_byte
             XREF rtc_init
 
 
@@ -86,8 +86,6 @@ _Startup:
 			CLI			; enable interrupts
 			
 mainLoop:
-			; do some i2c stuff
-			JSR		rtc_init
 			
 			; update heatbeat led
 			JSR		led_write
@@ -115,6 +113,8 @@ mainLoop:
 ;* Exit Variables: None 
 ;**************************************************************
 _Vtpmovf:   
+			; do some i2c stuff
+			JSR		rtc_init
 			          
 			; Toggle Heartbeat LED			
 			LDA		led_data			; load current LED pattern

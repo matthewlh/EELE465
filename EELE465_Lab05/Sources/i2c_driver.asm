@@ -15,7 +15,7 @@ SDA 		EQU 2 		;Serial data bit number
             INCLUDE 'MC9S08QG8.inc'
             
 ; export symbols
-            XDEF i2c_init, i2c_start, i2c_stop, i2c_tx_byte
+            XDEF i2c_init, i2c_start, i2c_stop, i2c_tx_byte, i2c_rx_byte
             ;XDEF 
             
 ; import symbols
@@ -26,7 +26,7 @@ SDA 		EQU 2 		;Serial data bit number
 MY_ZEROPAGE: SECTION  SHORT
 
 			BitCounter:		DS.B	1		; Used to count bits in a Tx
-			Value:			DS.B	1		; Used to store data value
+			Value:			DS.B	1		; Used to store rx data value
 			
 ; code section
 MyCode:     SECTION
@@ -110,31 +110,31 @@ i2c_tx_byte:
 			LDX 	#$08
 			STX 	BitCounter
 
-nextbit:
+tx_nextbit:
 			ROLA						; Shift MSB into Carry
-			BCC		send_low			; Send low bit or high bit
+			BCC		tx_send_low			; Send low bit or high bit
 			
-send_high:
+tx_send_high:
 			BSET	SDA, PTAD			; set the data bit value
 			JSR		i2c_setup_delay		; Give some time for data
 			
-setup:
+tx_setup:
 			BSET	SCL, PTAD			; clock in data
 			JSR		i2c_bit_delay		; wait a bit
-			BRA		continue			; continue
+			BRA		tx_continue			; continue
 			
-send_low:
+tx_send_low:
 			BCLR	SDA, PTAD			; set the data bit value
 			JSR		i2c_setup_delay		; Give some time for data
-			BRA		setup				; clock in the bit
+			BRA		tx_setup				; clock in the bit
 
-continue:
+tx_continue:
 			BCLR	SCL, PTAD			; Restore clock to low state
 			DEC		BitCounter			; Decrement the bit counter
-			BEQ		ack_poll			; Last bit?
-			BRA		nextbit				; Do the next bit
+			BEQ		tx_ack_poll			; Last bit?
+			BRA		tx_nextbit			; Do the next bit
 
-ack_poll:
+tx_ack_poll:
 			BSET	SDA, PTAD
 			BCLR	SDA, PTADD			; Set SDA as input
 			JSR  	i2c_setup_delay		; wait
@@ -142,15 +142,101 @@ ack_poll:
 			BSET	SCL, PTAD			; clock the line
 			JSR		i2c_bit_delay		; wait
 			
-			BRCLR	SDA, PTAD, done		; check SDA for ack
+			BRCLR	SDA, PTAD, tx_done	; check SDA for ack
 						
-no_ack:		
+tx_no_ack:		
 			; do error handling here
 			
-done:
+tx_done:
 			BCLR	SCL, PTAD			; restore the clock line
 			BSET	SDA, PTADD			; SDA back to output
 			RTS							; done
+;**************************************************************
+
+;************************************************************** 
+;* Subroutine Name: i2c_rx_byte  
+;* Description: Recieves a byte from the I2C bus. 
+;*				Will Ack the byte if Accu A != 0
+;*				Data returned in Accu A 
+;* 
+;* Registers Modified: A, X
+;* Entry Variables: None
+;* Exit Variables: None
+;**************************************************************
+i2c_rx_byte:
+
+			; clear output var
+			CLR		Value
+			
+			; set BitCounter
+			LDX 	#$08
+			STX 	BitCounter
+			
+			; set SDA to input and pull clock low
+			BCLR	SDA, PTADD
+			BCLR	SCL, PTAD
+			
+rx_nextbit:
+			; wait for a bit
+			JSR		i2c_bit_delay
+
+			; shift the last bit recieved left (and fill LSB with zero)
+			LSL		Value
+			
+			; clock the line and wait
+			BSET	SCL, PTAD
+			JSR		i2c_setup_delay
+
+			; grab bit from bus
+			BRCLR	SDA, PTAD, rx_low
+			
+rx_high:
+			; store a 1 to Value
+			BSET	0, Value
+			BRA		rx_continue
+
+rx_low:
+			; do nothing since LSL fills with 0
+
+rx_continue:
+			BCLR	SCL, PTAD			; Restore clock to low state
+			DEC		BitCounter			; Decrement the bit counter
+			BNE		rx_nextbit			; More bits?
+			
+			
+			; set SDA back to output
+			BSET	SDA, PTADD
+			
+			; test Accu A == 0
+			CBEQA	#$00, rx_nack
+			BRA		rx_ack
+
+rx_ack:
+			; clear data bit to acknowledge
+			BCLR	SDA, PTAD			
+			BRA		rx_done
+
+rx_nack:
+			; set data bit to not acknowledge
+			BSET	SDA, PTAD			
+
+rx_done:
+			; let ack/nack settle
+			JSR		i2c_setup_delay
+			
+			;clock the ack/nack 
+			BSET	SCL, PTAD
+			JSR		i2c_bit_delay
+			
+			; retun clock to low
+			BCLR	SCL, PTAD
+			
+			; load Value into Accu A
+			LDA		Value
+			
+			RTS
+
+
 ;**************************************************************
 
 ;************************************************************** 

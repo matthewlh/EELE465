@@ -20,7 +20,7 @@ RTC_ADDR_R 	EQU $D1 	; Slave address to read from RTC
             ;XDEF 
             
 ; import symbols
-			XREF i2c_init, i2c_start, i2c_stop, i2c_tx_byte
+			XREF i2c_init, i2c_start, i2c_stop, i2c_tx_byte, i2c_rx_byte
 
 
 ; variable/data section
@@ -45,12 +45,28 @@ rtc_init:
 			JSR		i2c_start
 			
 			; send rtc read addr
-			LDA		#RTC_ADDR_R
+			LDA		#RTC_ADDR_W
 			JSR 	i2c_tx_byte
 			
 			; send register addr
 			LDA		#$0F
 			JSR		i2c_tx_byte		
+
+			; stop condition
+			JSR		i2c_stop
+			
+			
+
+			; start condition
+			JSR		i2c_start
+			
+			; send rtc read addr
+			LDA		#RTC_ADDR_R
+			JSR 	i2c_tx_byte
+			
+			; send register addr
+			LDA		#$00
+			JSR		i2c_rx_byte		
 
 			; stop condition
 			JSR		i2c_stop			
