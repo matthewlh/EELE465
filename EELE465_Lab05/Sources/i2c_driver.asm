@@ -11,8 +11,6 @@
 SCL 		EQU 3 		;Serial clock
 SDA 		EQU 2 		;Serial data
 
-RTCADDR 	EQU $2C 	; Slave address of RTC
-
 ; Include derivative-specific definitions
             INCLUDE 'MC9S08QG8.inc'
             

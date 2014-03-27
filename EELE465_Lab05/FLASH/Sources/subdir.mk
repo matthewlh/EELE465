@@ -14,6 +14,7 @@ ASM_SRCS += \
 ../Sources/led.asm \
 ../Sources/main.asm \
 ../Sources/math.asm \
+../Sources/rtc_driver.asm \
 
 ASM_SRCS_QUOTED += \
 "../Sources/adc.asm" \
@@ -24,6 +25,7 @@ ASM_SRCS_QUOTED += \
 "../Sources/led.asm" \
 "../Sources/main.asm" \
 "../Sources/math.asm" \
+"../Sources/rtc_driver.asm" \
 
 OBJS += \
 ./Sources/adc_asm.obj \
@@ -34,6 +36,7 @@ OBJS += \
 ./Sources/led_asm.obj \
 ./Sources/main_asm.obj \
 ./Sources/math_asm.obj \
+./Sources/rtc_driver_asm.obj \
 
 ASM_DEPS += \
 ./Sources/adc_asm.d \
@@ -44,6 +47,7 @@ ASM_DEPS += \
 ./Sources/led_asm.d \
 ./Sources/main_asm.d \
 ./Sources/math_asm.d \
+./Sources/rtc_driver_asm.d \
 
 OBJS_QUOTED += \
 "./Sources/adc_asm.obj" \
@@ -54,6 +58,7 @@ OBJS_QUOTED += \
 "./Sources/led_asm.obj" \
 "./Sources/main_asm.obj" \
 "./Sources/math_asm.obj" \
+"./Sources/rtc_driver_asm.obj" \
 
 ASM_DEPS_QUOTED += \
 "./Sources/adc_asm.d" \
@@ -64,6 +69,7 @@ ASM_DEPS_QUOTED += \
 "./Sources/led_asm.d" \
 "./Sources/main_asm.d" \
 "./Sources/math_asm.d" \
+"./Sources/rtc_driver_asm.d" \
 
 OBJS_OS_FORMAT += \
 ./Sources/adc_asm.obj \
@@ -74,6 +80,7 @@ OBJS_OS_FORMAT += \
 ./Sources/led_asm.obj \
 ./Sources/main_asm.obj \
 ./Sources/math_asm.obj \
+./Sources/rtc_driver_asm.obj \
 
 
 # Each subdirectory must supply rules for building sources it contributes
@@ -143,6 +150,14 @@ Sources/math_asm.obj: ../Sources/math.asm
 	@echo 'Executing target #8 $<'
 	@echo 'Invoking: HCS08 Assembler'
 	"$(HC08ToolsEnv)/ahc08" -ArgFile"Sources/math.args" -Objn"Sources/math_asm.obj" "$<" -Lm="$(@:%.obj=%.d)" -LmCfg=xilmou
+	@echo 'Finished building: $<'
+	@echo ' '
+
+Sources/rtc_driver_asm.obj: ../Sources/rtc_driver.asm
+	@echo 'Building file: $<'
+	@echo 'Executing target #9 $<'
+	@echo 'Invoking: HCS08 Assembler'
+	"$(HC08ToolsEnv)/ahc08" -ArgFile"Sources/rtc_driver.args" -Objn"Sources/rtc_driver_asm.obj" "$<" -Lm="$(@:%.obj=%.d)" -LmCfg=xilmou
 	@echo 'Finished building: $<'
 	@echo ' '
 

@@ -8,10 +8,9 @@
 ;**************************************************************
 
 ; EQU statements
-SCL 		EQU 3 		;Serial clock
-SDA 		EQU 2 		;Serial data
 
-RTCADDR 	EQU $2C 	; Slave address of RTC
+RTC_ADDR_W 	EQU $D0 	; Slave address to write to RTC
+RTC_ADDR_R 	EQU $D1 	; Slave address to read from RTC
 
 ; Include derivative-specific definitions
             INCLUDE 'MC9S08QG8.inc'
@@ -40,9 +39,21 @@ MyCode:     SECTION
 ;* Entry Variables: None
 ;* Exit Variables: None
 ;**************************************************************
-i2c_init:
+rtc_init:
 
+			; start condition
+			JSR		i2c_start
+			
+			; send rtc read addr
+			LDA		RTC_ADDR_R
+			JSR 	i2c_tx_byte
+			
+			; send register addr
+			LDA		#$0F
+			JSR		i2c_tx_byte		
 
+			; stop condition
+			JSR		i2c_stop			
 
 			RTS
 

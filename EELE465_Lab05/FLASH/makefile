@@ -2,7 +2,7 @@
 # Automatically-generated file. Do not edit!
 ################################################################################
 
-#Progress monitor hint: 8
+#Progress monitor hint: 9
 first : all
 -include ../makefile.init
 
@@ -89,14 +89,14 @@ endif
 # Tool invocations
 EELE465_Lab03.abs: $(OBJS) $(USER_OBJS) ../Project_Settings/Linker_Files/Project.prm
 	@echo 'Building target: $@'
-	@echo 'Executing target #9 $@'
+	@echo 'Executing target #10 $@'
 	@echo 'Invoking: S08 Linker'
 	"$(HC08ToolsEnv)/linker" -ArgFile"EELE465_Lab03.args" -O"EELE465_Lab03.abs"
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 EELE465_Lab03.abs.s19: $(BBL_SRCS) $(EXECUTABLES)
-	@echo 'Executing target #10 $@'
+	@echo 'Executing target #11 $@'
 	@echo 'Invoking: S08 Burner'
 	"$(HC08ToolsEnv)/burner" -ArgFile"EELE465_Lab03.abs.args" -f="$<" -env"ABS_FILE=$(strip $(EXECUTABLES_OS_FORMAT))"
 	@echo 'Finished building: $@'
@@ -104,7 +104,7 @@ EELE465_Lab03.abs.s19: $(BBL_SRCS) $(EXECUTABLES)
 
 # Other Targets
 clean:
-	-$(RM) $(S_DEPS_QUOTED) "./*/*.obj"  $(CPP_DEPS_QUOTED) $(CC_DEPS_QUOTED) $(S_UPPER_DEPS_QUOTED) $(CXX_DEPS_QUOTED) "./*/*.d"  $(BURNER_OUTPUT_OUTPUTS_QUOTED) $(ASM_UPPER_DEPS_QUOTED) $(C_UPPER_DEPS_QUOTED) $(C++_DEPS_QUOTED) $(EXECUTABLES_QUOTED) $(C_DEPS_QUOTED) $(ProjDirPath)/FLASH/EELE465_Lab03.abs
+	-$(RM) $(S_DEPS_QUOTED) "./*/*.obj"  $(CPP_DEPS_QUOTED) $(CC_DEPS_QUOTED) $(S_UPPER_DEPS_QUOTED) $(CXX_DEPS_QUOTED) "./*/*.d"  $(BURNER_OUTPUT_OUTPUTS_QUOTED) $(ASM_UPPER_DEPS_QUOTED) $(C_UPPER_DEPS_QUOTED) $(C++_DEPS_QUOTED) $(EXECUTABLES_QUOTED) $(C_DEPS_QUOTED) $(ProjDirPath)/FLASH/EELE465_Lab03.abs $(ProjDirPath)/FLASH/EELE465_Lab03.abs.args $(ProjDirPath)/FLASH/EELE465_Lab03.abs.s19 $(ProjDirPath)/FLASH/EELE465_Lab03.args $(ProjDirPath)/FLASH/EELE465_Lab03.map
 	-@echo ' '
 
 .PHONY: all clean dependents explicit-dependencies warning-messages

@@ -1980,6 +1980,8 @@ feed_watchdog: MACRO
             XREF adc_init, adc_read_ch26_avg, adc_read_ch2_avg, adc_read_avg, adc_data_0, adc_data_1
             XREF math_mul_16
             XREF INTACC1, INTACC2
+            XREF i2c_init, i2c_start, i2c_stop, i2c_tx_byte
+            XREF rtc_init
 
 
 ; variable/data section
@@ -2033,321 +2035,30 @@ _Startup:
 			LDA		#$00
 			STA		led_data
 			
-			; init ADC
-			JSR		adc_init
+			; init i2c
+			JSR		i2c_init
             
 			CLI			; enable interrupts
 			
 mainLoop:
-;*** reset to start
+			; do some i2c stuff
+			JSR		rtc_init
 			
-			; clear display
-			JSR		lcd_clear
-			
-
-;*** prompt user for input
-			LDHX	#str_prompt
-			LDA		str_prompt_length
-			JSR		lcd_str			
-			
-;*** wait for user response, n
-mainloop_prompt_wait:
-
-           	; Update heartheat LED while we wait	
+			; update heatbeat led
 			JSR		led_write
 			
-			; feed watchdog while we wait
-            feed_watchdog
-            STA SRS              ; feed the watchdog
+			; configure loop delays: 0x001388 = 20 ms
+			LDA		#$00
+			STA		2,X
+			LDA		#$13
+			STA		1,X
+			LDA		#$88
+			STA		0,X
 			
-			; scan keypad
-           	JSR		keypad_scan
-			
-			; check for button press
-			JSR		keypad_interpret
-			
-			; if no button press, repeat
-			BEQ		mainloop_prompt_wait		
-			
-			
-;*** read external temp sensor n times
-			STA		num_samples
-			JSR		adc_read_ch2_avg
-			
-;*** do math external temp sensor data
-
-			; multiply n*4
-			LDA		num_samples
-			LDX		#04
-			MUL		; X:A <- (X) * (A)
-			
-			; load upper byte of adc_data to HX 
-			LDHX	adc_data_0
-			
-			; move result of n*4 to X
-			PSHA
-			PULX
-			
-			; load A with lower byte of adc_data 
-			LDA		adc_data_1
-			
-			; divide adc_data by (n*4)
-			DIV		; A <- (H:A)/(X)
-
-			; save result in temp
-			STA		temp
-			
-			; subtract result from offset $93
-			LDA		#$93
-			SUB		temp
-			STA		temp
-
-; make sure value less than 99
-			CMP		#$63
-			BLO		mainloop_write_external
-			LDA		#$63	
-			STA		temp		
-			
-mainloop_write_external:
-
-			; clear display
-			JSR		lcd_clear
-
-;*** write external temp in K
-
-			; write "T,K:" to the LCD 
-			LDHX	#str_TK
-			LDA		str_TK_length
-			JSR		lcd_str	
-			
-			
-			; temp >= 27 C == 300 K?
-			LDA		temp
-			CMP		#$1B
-			BLO		mainloop_external_k_small
-			
-mainloop_external_k_big:
-			; convert to K
-			SUB		#$1B
-			STA		temp_k
-			
-			; write 3 for 300K
-			LDA		#'3'
-			JSR		lcd_char
-			BRA		mainloop_external_k
-			
-mainloop_external_k_small:
-			; convert to K
-			ADD		#$49
-			STA		temp_k
-			
-			; write 2 for 200K
-			LDA		#'2'
-			JSR		lcd_char
-
-mainloop_external_k:
-			LDA		temp_k
-
-			; write upper number to LCD
-			LDHX	#$000A
-			DIV						; A <= (H:A)/(X), H <= (remainder)
-			
-			; convert to ASCII char
-			JSR		lcd_num_to_char
-			
-			; write to LCD
-			JSR		lcd_char
-			
-			; move remainder from H to A
-			PSHH
-			PULA
-			
-			; convert to ASCII char
-			JSR		lcd_num_to_char
-			
-			; write to LCD
-			JSR		lcd_char
-			
-			
-;*** write external temp in C
-
-			; write " T,C:" to the LCD 
-			LDHX	#str_TC
-			LDA		str_TC_length
-			JSR		lcd_str	
-			
-			LDA		temp
-
-			; write upper number to LCD
-			LDHX	#$000A
-			DIV						; A <= (H:A)/(X), H <= (remainder)
-			
-			; convert to ASCII char
-			JSR		lcd_num_to_char
-			
-			; write to LCD
-			JSR		lcd_char
-			
-			; move remainder from H to A
-			PSHH
-			PULA
-			
-			; convert to ASCII char
-			JSR		lcd_num_to_char
-			
-			; write to LCD
-			JSR		lcd_char
-			
-
-            
-            
-;*** do all the same stuff again for the internal temp sensor
-
-			;*** read internal temp sensor n times
-			LDA		num_samples
-			JSR		adc_read_ch26_avg
-
-;*** do math on internal temp sensor data
-
-			; divide adc_data by n
-			LDHX	adc_data_0
-			LDA		adc_data_1
-			LDX		num_samples
-			DIV						; A <= (H:A)/(X), H <= (remainder)
-			STA		temp
-			
-			; subtract from 230
-			LDA		#$E6
-			SUB		temp
-			
-			; multiply by slope 2
-			LDX		#$02
-			MUL
-			
-			;save result
-			STA		temp
-
-; make sure value less than 99
-			CMP		#$63
-			BLO		mainloop_write_internal
-			LDA		#$63	
-			STA		temp	
-			
-mainloop_write_internal:
-			
-			; jump to row 1 of LCD
-			JSR		lcd_goto_row1
-
-;*** write internal temp in K
-
-			; write "T,K:" to the LCD 
-			LDHX	#str_TK
-			LDA		str_TK_length
-			JSR		lcd_str	
-			
-			
-			; temp >= 27 C == 300 K?
-			LDA		temp
-			CMP		#$1B
-			BLO		mainloop_internal_k_small
-			
-mainloop_internal_k_big:
-			; convert to K
-			SUB		#$1B
-			STA		temp_k
-			
-			; write 3 for 300K
-			LDA		#'3'
-			JSR		lcd_char
-			BRA		mainloop_internal_k
-			
-mainloop_internal_k_small:
-			; convert to K
-			ADD		#$49
-			STA		temp_k
-			
-			; write 2 for 200K
-			LDA		#'2'
-			JSR		lcd_char
-
-mainloop_internal_k:
-			LDA		temp_k
-
-			; write upper number to LCD
-			LDHX	#$000A
-			DIV						; A <= (H:A)/(X), H <= (remainder)
-			
-			; convert to ASCII char
-			JSR		lcd_num_to_char
-			
-			; write to LCD
-			JSR		lcd_char
-			
-			; move remainder from H to A
-			PSHH
-			PULA
-			
-			; convert to ASCII char
-			JSR		lcd_num_to_char
-			
-			; write to LCD
-			JSR		lcd_char
-			
-;*** write internal temp in C
-
-			; write " T,C:" to the LCD 
-			LDHX	#str_TC
-			LDA		str_TC_length
-			JSR		lcd_str	
-			
-			LDA		temp
-
-			; write upper number to LCD
-			LDHX	#$000A
-			DIV						; A <= (H:A)/(X), H <= (remainder)
-			
-			; convert to ASCII char
-			JSR		lcd_num_to_char
-			
-			; write to LCD
-			JSR		lcd_char
-			
-			; move remainder from H to A
-			PSHH
-			PULA
-			
-			; convert to ASCII char
-			JSR		lcd_num_to_char
-			
-			; write to LCD
-			JSR		lcd_char			
-
-
-
-;*** wait for '*' key press
-mainloop_end:
-
-           	; Update heartheat LED while we wait	
-			JSR		led_write
-			
-           	; feed watchdog while we wait
-            feed_watchdog
-            STA SRS              ; feed the watchdog
-            
-            ; scan keypad
-           	JSR		keypad_scan
-			
-			; check for button press
-			JSR		keypad_interpret
-			
-			; if '*' button pressed, restart
-			CBEQA	#$0E, mainloop_restart
-            
-            ; keep waiting for '*' key
-            BRA    	mainloop_end
-            
-mainloop_restart:
-			JMP		mainLoop
+			; jump to the delay loop
+			JSR		SUB_delay
+ 
+			BRA		mainLoop
 
 ;************************************************************** 
 ;* Subroutine Name: _Vtpmovf 
