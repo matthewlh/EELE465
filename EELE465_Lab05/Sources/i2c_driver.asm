@@ -21,8 +21,7 @@ RTCADDR 	EQU $2C 	; Slave address of RTC
             ;XDEF 
             
 ; import symbols
-			XREF SUB_delay, SUB_delay_cnt
-			XREF bus_read, bus_write, bus_addr, bus_data
+			;XREF 
 
 
 ; variable/data section
