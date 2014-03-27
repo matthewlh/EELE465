@@ -45,7 +45,7 @@ rtc_init:
 			JSR		i2c_start
 			
 			; send rtc read addr
-			LDA		RTC_ADDR_R
+			LDA		#RTC_ADDR_R
 			JSR 	i2c_tx_byte
 			
 			; send register addr

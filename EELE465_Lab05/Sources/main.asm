@@ -93,9 +93,9 @@ mainLoop:
 			JSR		led_write
 			
 			; configure loop delays: 0x001388 = 20 ms
-			LDA		#$00
+			LDA		#$0F
 			STA		2,X
-			LDA		#$13
+			LDA		#$FF
 			STA		1,X
 			LDA		#$88
 			STA		0,X

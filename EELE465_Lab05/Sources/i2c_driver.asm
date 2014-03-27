@@ -8,8 +8,8 @@
 ;**************************************************************
 
 ; EQU statements
-SCL 		EQU 3 		;Serial clock
-SDA 		EQU 2 		;Serial data
+SCL 		EQU 3 		;Serial clock bit number
+SDA 		EQU 2 		;Serial data bit number
 
 ; Include derivative-specific definitions
             INCLUDE 'MC9S08QG8.inc'
@@ -46,11 +46,11 @@ i2c_init:
 			
 			;*** init SDA and SCL pins as outputs
 			BSET	SDA, PTADD
-			BSET	SDA, PTADD
+			BSET	SCL, PTADD
 			
 			;*** init SDA and SCL pins to high
 			BSET	SDA, PTAD
-			BSET	SDA, PTAD
+			BSET	SCL, PTAD
 
 			RTS
 
@@ -101,7 +101,7 @@ i2c_stop:
 ;*				while SCL is low, otherwise a STOP or START 
 ;*				could be implied.
 ;* 
-;* Registers Modified: None
+;* Registers Modified: A, X
 ;* Entry Variables: None
 ;* Exit Variables: None
 ;**************************************************************
@@ -149,7 +149,7 @@ no_ack:
 			
 done:
 			BCLR	SCL, PTAD			; restore the clock line
-			BSET	SDA, PTAD			; SDA back to output
+			BSET	SDA, PTADD			; SDA back to output
 			RTS							; done
 ;**************************************************************
 
