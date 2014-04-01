@@ -26,7 +26,8 @@
             XREF math_mul_16
             XREF INTACC1, INTACC2
             XREF i2c_init, i2c_start, i2c_stop, i2c_tx_byte, i2c_rx_byte
-            XREF rtc_init
+            XREF rtc_init, rtc_set_time, rtc_get_time
+            XREF Sec, Min, Hour, Date, Month, Year
 
 
 ; variable/data section
@@ -82,6 +83,9 @@ _Startup:
 			
 			; init i2c
 			JSR		i2c_init
+			
+			; init rtc
+			JSR		rtc_init
             
 			CLI			; enable interrupts
 			
@@ -89,14 +93,6 @@ mainLoop:
 			
 			; update heatbeat led
 			JSR		led_write
-			
-			; configure loop delays: 0x001388 = 20 ms
-			LDA		#$0F
-			STA		2,X
-			LDA		#$FF
-			STA		1,X
-			LDA		#$88
-			STA		0,X
 			
 			; jump to the delay loop
 			JSR		SUB_delay
@@ -113,8 +109,8 @@ mainLoop:
 ;* Exit Variables: None 
 ;**************************************************************
 _Vtpmovf:   
-			; do some i2c stuff
-			JSR		rtc_init
+			; read rtc time
+			JSR		rtc_get_time
 			          
 			; Toggle Heartbeat LED			
 			LDA		led_data			; load current LED pattern
