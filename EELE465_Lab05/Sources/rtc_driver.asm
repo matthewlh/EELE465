@@ -17,11 +17,14 @@ RTC_REG_SEC		EQU	$00		; register address of the seconds register
             INCLUDE 'MC9S08QG8.inc'
             
 ; export symbols
-            XDEF rtc_init, rtc_set_time, rtc_get_time
+            XDEF rtc_init, rtc_set_time, rtc_get_time, rtc_display_data
             XDEF Sec, Min, Hour, Date, Month, Year 
             
 ; import symbols
 			XREF i2c_init, i2c_start, i2c_stop, i2c_tx_byte, i2c_rx_byte
+			
+			XREF lcd_init, lcd_write, lcd_char, lcd_str, lcd_num_to_char, lcd_clear, lcd_goto_row0, lcd_goto_row1, 
+            XREF lcd_data, lcd_char_data, lcd_col_idx
 
 
 ; variable/data section
@@ -35,6 +38,15 @@ MY_ZEROPAGE: SECTION  SHORT
 			Year:				DS.B	2
 			
 			Byte_counter:		DS.B	1
+
+MY_CONST: SECTION
+; Constant Values and Tables Section
+			
+			str_date:			DC.B 	"Date is "	
+			str_date_length:	DC.B	8
+			str_time:			DC.B 	"Time is "	
+			str_time_length:	DC.B	8
+			
 			
 ; code section
 MyCode:     SECTION
@@ -240,9 +252,190 @@ rtc_get_time:
 			JSR		i2c_stop
 			
 			; mask off the recieved data
-			;JSR		rtc_mask_data
+			JSR		rtc_mask_data
 
 			RTS
 
 
 ;**************************************************************
+
+
+;************************************************************** 
+;* Subroutine Name: rtc_display_data  
+;* Description: Takes the data in the Sec, Min, etc vars and 
+;*				writes it to the lcd.
+;* 
+;* Registers Modified: Accu A
+;* Entry Variables: None
+;* Exit Variables: None
+;**************************************************************
+rtc_display_data:
+
+			; clear the lcd
+			JSR 	lcd_clear
+			
+			; goto top row
+			JSR		lcd_goto_row0
+			
+			; write header
+			LDHX	#str_date
+			LDA		str_date_length
+			JSR		lcd_str
+			
+			; write month
+			LDA		Month+0
+			JSR		lcd_num_to_char
+			JSR		lcd_char
+			
+			LDA		Month+1
+			JSR		lcd_num_to_char
+			JSR		lcd_char
+			
+			; write '/'
+			LDA		#'/'
+			JSR		lcd_char
+			
+			; write Date
+			LDA		Date+0
+			JSR		lcd_num_to_char
+			JSR		lcd_char
+			
+			LDA		Date+1
+			JSR		lcd_num_to_char
+			JSR		lcd_char
+			
+			; write '/'
+			LDA		#'/'
+			JSR		lcd_char
+			
+			; write Year
+			LDA		Year+0
+			JSR		lcd_num_to_char
+			JSR		lcd_char
+			
+			LDA		Year+1
+			JSR		lcd_num_to_char
+			JSR		lcd_char
+			
+			; goto second row on lcd
+			JSR		lcd_goto_row1
+			
+			; write header
+			LDHX	#str_time
+			LDA		str_time_length
+			JSR		lcd_str
+			
+			; write hour
+			LDA		Hour+0
+			JSR		lcd_num_to_char
+			JSR		lcd_char
+			
+			LDA		Hour+1
+			JSR		lcd_num_to_char
+			JSR		lcd_char
+			
+			; write ':'
+			LDA		#':'
+			JSR		lcd_char
+			
+			; write minute
+			LDA		Min+0
+			JSR		lcd_num_to_char
+			JSR		lcd_char
+			
+			LDA		Min+1
+			JSR		lcd_num_to_char
+			JSR		lcd_char
+			
+			; write ':'
+			LDA		#':'
+			JSR		lcd_char
+			
+			; write minute
+			LDA		Sec+0
+			JSR		lcd_num_to_char
+			JSR		lcd_char
+			
+			LDA		Sec+1
+			JSR		lcd_num_to_char
+			JSR		lcd_char
+			
+			; done
+			RTS
+			
+
+			
+;**************************************************************
+
+;************************************************************** 
+;* Subroutine Name: rtc_mask_data  
+;* Description: Takes the raw register values recieved in the 
+;*				Sec, Min, etc vars and masks off the data we 
+;*				want.
+;* 
+;* Registers Modified: Accu A
+;* Entry Variables: None
+;* Exit Variables: None
+;**************************************************************
+rtc_mask_data:
+
+			; Seconds
+			LDA		Sec+0
+			AND		#$07
+			STA		Sec+0
+			
+			LDA		Sec+1
+			AND		#$0F
+			STA		Sec+1
+
+			; Minutes
+			LDA		Min+0
+			AND		#$07
+			STA		Min+0
+			
+			LDA		Min+1
+			AND		#$0F
+			STA		Min+1
+
+			; Hours
+			LDA		Hour+0
+			AND		#$03
+			STA		Hour+0
+			
+			LDA		Hour+1
+			AND		#$0F
+			STA		Hour+1
+
+			; Date
+			LDA		Date+0
+			AND		#$03
+			STA		Date+0
+			
+			LDA		Date+1
+			AND		#$0F
+			STA		Date+1
+
+			; Month
+			LDA		Month+0
+			AND		#$01
+			STA		Month+0
+			
+			LDA		Month+1
+			AND		#$0F
+			STA		Month+1
+
+			; Year
+			LDA		Year+0
+			AND		#$0F
+			STA		Year+0
+			
+			LDA		Year+1
+			AND		#$0F
+			STA		Year+1
+			
+			; done
+			RTS
+
+
+;**************************************************************
+

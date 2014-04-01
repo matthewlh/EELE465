@@ -288,24 +288,19 @@ lcd_char:
 			ORA		#$20
 			JSR		lcd_write
 			
-;*** Wait for 20 ms ***
+;*** Wait for 1 ms ***
 			LDHX #SUB_delay_cnt
 
-			; configure loop delays: 0x001388 = 20 ms
+			; configure loop delays: 0x0000FA = 1 ms
 			LDA		#$00
 			STA		2,X
-			LDA		#$13
+			LDA		#$00
 			STA		1,X
-			LDA		#$88
+			LDA		#$FA
 			STA		0,X
 
 			; jump to the delay loop
-			JSR		SUB_delay
-
-			; increment lcd_col_idx
-			LDA		lcd_col_idx
-			INCA
-			STA		lcd_col_idx					
+			JSR		SUB_delay				
 			
 			; done
 			PULX
@@ -394,6 +389,20 @@ lcd_num_to_char:
 ;* Exit Variables: None 
 ;**************************************************************
 lcd_clear:
+						
+;*** Wait for 20 ms ***
+			LDHX #SUB_delay_cnt
+			
+			; configure loop delays: 0x001388 = 20 ms
+			LDA		#$00
+			STA		2,X
+			LDA		#$13
+			STA		1,X
+			LDA		#$88
+			STA		0,X
+			
+			; jump to the delay loop
+			JSR		SUB_delay
 								
 			; Send display clear command
 			LDA		#$00
@@ -437,6 +446,8 @@ lcd_goto_row0:
 			JSR		lcd_write
 			LDA		#$00
 			JSR		lcd_write
+			
+			RTS
 
 ;**************************************************************
 
@@ -456,6 +467,8 @@ lcd_goto_row1:
 			JSR		lcd_write
 			LDA		#$00
 			JSR		lcd_write
+
+			RTS
 			
 ;**************************************************************
 
