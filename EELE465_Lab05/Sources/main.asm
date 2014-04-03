@@ -23,9 +23,10 @@
             
             XREF led_write, led_data
             
-            XREF keypad_interpret, keypad_scan, keypad_data_0, keypad_data_1
+            XREF keypad_interpret, keypad_scan, keypad_get_keypress
+            XREF keypad_data_0, keypad_data_1
             
-            XREF lcd_init, lcd_write, lcd_char, lcd_str, lcd_num_to_char, lcd_clear, lcd_goto_row0, lcd_goto_row1, 
+            XREF lcd_init, lcd_write, lcd_char, lcd_str, lcd_num_to_char, lcd_clear, lcd_goto_addr, lcd_goto_row0, lcd_goto_row1 
             XREF lcd_data, lcd_char_data, lcd_col_idx
             
             XREF adc_init, adc_read_ch26_avg, adc_read_ch2_avg, adc_read_avg, adc_data_0, adc_data_1
@@ -35,7 +36,7 @@
             
             XREF i2c_init, i2c_start, i2c_stop, i2c_tx_byte, i2c_rx_byte
             
-            XREF rtc_init, rtc_set_time, rtc_get_time, rtc_display_data
+            XREF rtc_init, rtc_set_time, rtc_get_time, rtc_display_data, rtc_prompt_time
             XREF Sec, Min, Hour, Date, Month, Year
 
 
@@ -48,6 +49,8 @@ MY_ZEROPAGE: SECTION  SHORT
 			
 			temp:				DS.B	1		; some space to hold stuff	
 			temp_k:				DS.B	1		; some space to hold stuff	
+			
+			rtc_set:			DS.B	1		; 0x01 when the rtc has been set, 0x00 otherwise
 			
 MY_CONST: SECTION
 ; Constant Values and Tables Section
@@ -95,11 +98,22 @@ _Startup:
 			
 			; init rtc
 			JSR		rtc_init
+			LDA		#$01
+			STA		rtc_set
             
 			CLI			; enable interrupts
 			
+			; set rtc
+			JSR		rtc_prompt_time
+			JSR		rtc_set_time
+			LDA		#$00
+			STA		rtc_set
+			
 mainLoop:			
 			feed_watchdog
+			
+			; update heatbeat led
+			JSR		led_write
  
 			BRA		mainLoop
 
@@ -113,11 +127,18 @@ mainLoop:
 ;* Exit Variables: None 
 ;**************************************************************
 _Vtpmovf:   
+
+			; check if rtc is ready
+			LDA		rtc_set
+			BNE		_Vtpmovf_heartbeat
+
 			; read rtc time
 			JSR		rtc_get_time
 			
 			; display RTC time on LCD
 			JSR		rtc_display_data
+			          
+_Vtpmovf_heartbeat:			          
 			          
 			; Toggle Heartbeat LED			
 			LDA		led_data			; load current LED pattern
@@ -128,9 +149,6 @@ _Vtpmovf:
 			LDA		TPMSC				; read register
 			AND		#$4E				; clear CH0F bit, but leav others alone
 			STA		TPMSC				; write back register
-			
-			; update heatbeat led
-			JSR		led_write
 
 			; Done, Return from Interrupt
 			RTI

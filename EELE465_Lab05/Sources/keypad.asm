@@ -11,15 +11,15 @@
 
 
 ; Include derivative-specific definitions
-            INCLUDE 'MC9S08QG8.inc'
+            INCLUDE 'derivative.inc'
             
 ; export symbols
-            XDEF keypad_interpret, keypad_scan, keypad_data_0, keypad_data_1, keypad_data_0_old, keypad_data_1, keypad_data_cmp 
+            XDEF keypad_interpret, keypad_scan, keypad_data_0, keypad_data_1, keypad_data_0_old, keypad_data_1, keypad_data_cmp, keypad_get_keypress
             
 ; import symbols
 			XREF bus_read, bus_write, bus_addr, bus_data
-			XREF led_data  
-			XREF lcd_char  
+			XREF led_write, led_data  
+			XREF lcd_char
 
 
 ; variable/data section
@@ -207,7 +207,7 @@ keypad_scan:
 ;* Description: Checks if a numeric key (1..9) was pressed. 
 ;*				When a key is pressed, it writes it to the LCD 
 ;*				and returns the numeric value in Accu A. 
-;*				Returns 0 when (1..9) was not pressed.
+;*				Returns 0xFF when (1..9) was not pressed.
 ;*				
 ;* 
 ;* Registers Modified: None
@@ -235,7 +235,7 @@ keypad_interpret_1:
 
 			; write a '1' to the LCD
 			LDA		#'1'
-			;JSR		lcd_char
+			JSR		lcd_char
 			
 			; return 0x01
 			LDA		#$01
@@ -251,7 +251,7 @@ keypad_interpret_2:
 
 			; write a '2' to the LCD
 			LDA		#'2'
-			;JSR		lcd_char
+			JSR		lcd_char
 			
 			; return 0x02
 			LDA		#$02
@@ -266,7 +266,7 @@ keypad_interpret_3:
 
 			; write a '3' to the LCD
 			LDA		#'3'
-			;JSR		lcd_char
+			JSR		lcd_char
 			
 			; return 0x03
 			LDA		#$03
@@ -282,7 +282,7 @@ keypad_interpret_A:
 
 			; write a 'A' to the LCD
 			LDA		#'A'
-			;JSR		lcd_char
+			JSR		lcd_char
 			
 			; return 0x0A
 			LDA		#$0A
@@ -302,7 +302,7 @@ keypad_interpret_4:
 
 			; write a '4' to the LCD
 			LDA		#'4'
-			;JSR		lcd_char
+			JSR		lcd_char
 			
 			; return 0x04
 			LDA		#$04
@@ -318,7 +318,7 @@ keypad_interpret_5:
 
 			; write a '5' to the LCD
 			LDA		#'5'
-			;JSR		lcd_char
+			JSR		lcd_char
 			
 			; return 0x05
 			LDA		#$05
@@ -334,7 +334,7 @@ keypad_interpret_6:
 
 			; write a '6' to the LCD
 			LDA		#'6'
-			;JSR		lcd_char
+			JSR		lcd_char
 			
 			; return 0x06
 			LDA		#$06
@@ -379,7 +379,7 @@ keypad_interpret_7:
 
 			; write a '7' to the LCD
 			LDA		#'7'
-			;JSR		lcd_char
+			JSR		lcd_char
 			
 			; return 0x07
 			LDA		#$07
@@ -395,7 +395,7 @@ keypad_interpret_8:
 
 			; write a '8' to the LCD
 			LDA		#'8'
-			;JSR		lcd_char
+			JSR		lcd_char
 			
 			; return 0x08
 			LDA		#$08
@@ -411,7 +411,7 @@ keypad_interpret_9:
 
 			; write a '9' to the LCD
 			LDA		#'9'
-			;JSR		lcd_char
+			JSR		lcd_char
 			
 			; return 0x09
 			LDA		#$09
@@ -448,7 +448,7 @@ keypad_interpret_E:
 
 			; write a 'E' to the LCD
 			LDA		#'E'
-			;JSR		lcd_char
+			JSR		lcd_char
 			
 			; return 0x0E
 			LDA		#$0E
@@ -464,7 +464,7 @@ keypad_interpret_0:
 
 			; write a '0' to the LCD
 			LDA		#'0'
-			;JSR		lcd_char
+			JSR		lcd_char
 			
 			; return 0x00
 			LDA		#$00
@@ -496,7 +496,7 @@ keypad_interpret_D:
 
 			; write a 'D' to the LCD
 			LDA		#'D'
-			;JSR		lcd_char
+			JSR		lcd_char
 			
 			; return 0x0D
 			LDA		#$0D
@@ -507,9 +507,43 @@ keypad_interpret_D:
 keypad_interpret_done:
 ;*** done ***
 			
-			; return 0x00
-			LDA		#$00
+			; return $FF to indicate no key pressed
+			LDA		#$FF
 			RTS
 
 ;**************************************************************
  
+
+
+;************************************************************** 
+;* Subroutine Name: keypad_get_keypress  
+;* Description: Continously scans and interprets the keypad
+;*				until a key is pressed.
+;*				
+;* 
+;* Registers Modified: None
+;* Entry Variables: None
+;* Exit Variables: Accu A
+;**************************************************************
+keypad_get_keypress:
+
+			; feed watchdog
+			feed_watchdog
+			
+			; update heatbeat led
+			JSR		led_write
+
+			; scan the keypad
+			JSR		keypad_scan
+			
+			; check for keypress
+			JSR		keypad_interpret
+			
+			; if no key pressed, repeat
+			CBEQA	#$FF, keypad_get_keypress
+			
+			; key was pressed, so we're done
+			RTS
+
+
+;**************************************************************

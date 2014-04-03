@@ -14,7 +14,7 @@
             INCLUDE 'MC9S08QG8.inc'
             
 ; export symbols
-            XDEF lcd_init, lcd_write, lcd_char, lcd_str, lcd_num_to_char, lcd_clear, lcd_goto_row0, lcd_goto_row1 
+            XDEF lcd_init, lcd_write, lcd_char, lcd_str, lcd_num_to_char, lcd_clear, lcd_goto_addr, lcd_goto_row0, lcd_goto_row1 
             XDEF lcd_data, lcd_char_data, lcd_col_idx
             
 ; import symbols
@@ -28,6 +28,8 @@ MY_ZEROPAGE: SECTION  SHORT
 			lcd_data:		DS.B	1	; lower 4 bits = LCD data lines, bit 6 = RS, bit 5 = RW
 			lcd_char_data:	DS.B	1	; used by lcd_char subroutine to store a character
 			lcd_col_idx:	DS.B	1	; index of the column of the LCD that the cursor is currently in
+			
+			lcd_addr:		DS.B	1	; holds an address for lcd_goto_addr 
 			
 			str_length:		DS.B	1	; holds the offset into a string for lcd_str
 			
@@ -425,6 +427,34 @@ lcd_clear:
 			JSR		SUB_delay
 
 			; done
+			RTS
+			
+;**************************************************************
+
+;************************************************************** 
+;* Subroutine Name: lcd_goto_addr 
+;* Description: Commands the LCD to put the cursor at the 
+;*				location given in Accu A.
+;*
+;* Registers Modified: A, HX
+;* Entry Variables: None
+;* Exit Variables: None 
+;**************************************************************
+lcd_goto_addr:
+
+			; store addr
+			STA		lcd_addr
+
+			; write upper nibble
+			NSA
+			AND		#$0F
+			JSR		lcd_write
+			
+			; write lower nibble			
+			LDA		lcd_addr
+			AND		#$0F
+			JSR		lcd_write
+
 			RTS
 			
 ;**************************************************************

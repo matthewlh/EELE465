@@ -17,14 +17,16 @@ RTC_REG_SEC		EQU	$00		; register address of the seconds register
             INCLUDE 'MC9S08QG8.inc'
             
 ; export symbols
-            XDEF rtc_init, rtc_set_time, rtc_get_time, rtc_display_data
+            XDEF rtc_init, rtc_set_time, rtc_get_time, rtc_display_data, rtc_prompt_time
             XDEF Sec, Min, Hour, Date, Month, Year 
             
 ; import symbols
 			XREF i2c_init, i2c_start, i2c_stop, i2c_tx_byte, i2c_rx_byte
 			
-			XREF lcd_init, lcd_write, lcd_char, lcd_str, lcd_num_to_char, lcd_clear, lcd_goto_row0, lcd_goto_row1, 
+			XREF lcd_init, lcd_write, lcd_char, lcd_str, lcd_num_to_char, lcd_clear, lcd_goto_addr, lcd_goto_row0, lcd_goto_row1 
             XREF lcd_data, lcd_char_data, lcd_col_idx
+            
+            XREF keypad_get_keypress
 
 
 ; variable/data section
@@ -46,6 +48,11 @@ MY_CONST: SECTION
 			str_date_length:	DC.B	8
 			str_time:			DC.B 	"Time is "	
 			str_time_length:	DC.B	8
+			
+			str_prompt_row0:			DC.B 	"Set   : MM/DD/YY"	
+			str_prompt_row0_length:		DC.B	16
+			str_prompt_row1:			DC.B 	"Clock : HH:MM:SS"	
+			str_prompt_row1_length:		DC.B	16
 			
 			
 ; code section
@@ -435,6 +442,119 @@ rtc_mask_data:
 			
 			; done
 			RTS
+
+
+;**************************************************************
+
+
+;************************************************************** 
+;* Subroutine Name: rtc_prompt_time  
+;* Description: Prompts the user to enter a date and time on  
+;*				the LCD with the keypad, and saves the 
+;*				user-entered time into the Sec, Min, etc vars.
+;* 
+;* Registers Modified: Accu A
+;* Entry Variables: None
+;* Exit Variables: None
+;**************************************************************
+rtc_prompt_time:
+
+;*** write promt to display
+
+			; clear the lcd
+			JSR 	lcd_clear
+			
+			; goto top row
+			JSR		lcd_goto_row0
+			
+			; write header
+			LDHX	#str_prompt_row0
+			LDA		str_prompt_row0_length
+			JSR		lcd_str
+			
+			; goto bottom row
+			JSR		lcd_goto_row1
+			
+			; write header
+			LDHX	#str_prompt_row1
+			LDA		str_prompt_row1_length
+			JSR		lcd_str
+			
+			; goto MM address
+			LDA		#$88
+			JSR		lcd_goto_addr
+			
+			; prompt for Month+0
+			JSR		keypad_get_keypress
+			STA		Month+0
+			
+			; prompt for Month+1
+			JSR		keypad_get_keypress
+			STA		Month+1
+			
+			; goto DD address
+			LDA		#$8B
+			JSR		lcd_goto_addr
+			
+			; prompt for Date+0
+			JSR		keypad_get_keypress
+			STA		Date+0
+			
+			; prompt for Date+1
+			JSR		keypad_get_keypress
+			STA		Date+1
+			
+			; goto YY address
+			LDA		#$8E
+			JSR		lcd_goto_addr
+			
+			; prompt for Year+0
+			JSR		keypad_get_keypress
+			STA		Year+0
+			
+			; prompt for Year+1
+			JSR		keypad_get_keypress
+			STA		Year+1
+			
+			; goto HH address
+			LDA		#$C8
+			JSR		lcd_goto_addr
+			
+			; prompt for Hour+0
+			JSR		keypad_get_keypress
+			STA		Hour+0
+			
+			; prompt for Hour+1
+			JSR		keypad_get_keypress
+			STA		Hour+1
+			
+			; goto MM address
+			LDA		#$CB
+			JSR		lcd_goto_addr
+			
+			; prompt for Min+0
+			JSR		keypad_get_keypress
+			STA		Min+0
+			
+			; prompt for Min+1
+			JSR		keypad_get_keypress
+			STA		Min+1
+			
+			; goto SS address
+			LDA		#$CE
+			JSR		lcd_goto_addr
+			
+			; prompt for Sec+0
+			JSR		keypad_get_keypress
+			STA		Sec+0
+			
+			; prompt for Sec+1
+			JSR		keypad_get_keypress
+			STA		Sec+1			
+			
+			; done 
+			RTS
+			
 
 
 ;**************************************************************
