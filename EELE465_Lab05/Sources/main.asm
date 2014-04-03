@@ -111,9 +111,6 @@ _Startup:
 			
 mainLoop:			
 			feed_watchdog
-			
-			; update heatbeat led
-			JSR		led_write
  
 			BRA		mainLoop
 
@@ -137,6 +134,9 @@ _Vtpmovf:
 			
 			; display RTC time on LCD
 			JSR		rtc_display_data
+			
+			; update heatbeat led
+			JSR		led_write
 			          
 _Vtpmovf_heartbeat:			          
 			          
