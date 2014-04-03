@@ -28,8 +28,7 @@ LM92_REG_TEMP		EQU	$00		; register address of the seconds register
 ; variable/data section
 MY_ZEROPAGE: SECTION  SHORT
 
-			
-			Byte_counter:		DS.B	1
+			Temp_Data_Raw:		DS.B	2
 
 MY_CONST: SECTION
 ; Constant Values and Tables Section
@@ -58,11 +57,12 @@ lm92_init:
 
 ;************************************************************** 
 ;* Subroutine Name: lm92_read_temp  
-;* Description: Read temperature from LM92
+;* Description: Read temperature from LM92 and converts to 
+;*				degrees C. The result is returned in Accu A.
 ;* 
-;* Registers Modified: None
+;* Registers Modified: Accu A
 ;* Entry Variables: None
-;* Exit Variables: None
+;* Exit Variables: Accu A
 ;**************************************************************
 lm92_read_temp:
 
@@ -91,16 +91,28 @@ lm92_read_temp:
 			; read byte
 			LDA		#$01			; ack the byte			
 			JSR		i2c_rx_byte	
+			STA		Temp_Data_Raw+0
 			
 			; read byte
 			LDA		#$00			; nack the byte			
 			JSR		i2c_rx_byte	
+			STA		Temp_Data_Raw+1
 			
 			; stop condition
 			JSR		i2c_stop
+			
 
+			; divide by 16 to convert to degrees C
+			LDHX	Temp_Data_Raw+0
+			LDX		#$80
+			LDA		Temp_Data_Raw+1
+			
+			DIV		; A <- (H:A)/(X)
 
 			; done			
 			RTS
 
 ;**************************************************************
+
+
+

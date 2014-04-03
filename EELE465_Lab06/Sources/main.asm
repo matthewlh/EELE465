@@ -130,8 +130,32 @@ mainLoop:
 ;**************************************************************
 _Vtpmovf: 
 
+  			; clear lcd
+  			JSR		lcd_clear
+  			
 			; read temp
   			JSR		lm92_read_temp
+  			
+  			; write upper number to LCD
+			LDHX	#$000A
+			DIV						; A <= (H:A)/(X), H <= (remainder)
+
+			; convert to ASCII char
+			JSR		lcd_num_to_char
+
+			; write to LCD
+			JSR		lcd_char
+
+			; move remainder from H to A
+			PSHH
+			PULA
+
+			; convert to ASCII char
+			JSR		lcd_num_to_char
+
+			; write to LCD
+			JSR		lcd_char
+  			
 
 			; check if rtc is ready
 			LDA		rtc_set
@@ -141,7 +165,7 @@ _Vtpmovf:
 			JSR		rtc_get_time
 			
 			; display RTC time on LCD
-			JSR		rtc_display_data
+			;JSR		rtc_display_data
 			
 			; update heatbeat led
 			JSR		led_write
