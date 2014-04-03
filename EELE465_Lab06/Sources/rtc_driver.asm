@@ -67,30 +67,7 @@ MyCode:     SECTION
 ;* Exit Variables: None
 ;**************************************************************
 rtc_init:
-
-			; load data into time vars
-			MOV		#$00, Sec+0
-			MOV		#$00, Sec+1
-
-			MOV		#$05, Min+0
-			MOV		#$03, Min+1
-
-			MOV		#$00, Hour+0
-			MOV		#$09, Hour+1
-
-			MOV		#$00, Date+0
-			MOV		#$01, Date+1
-
-			MOV		#$00, Month+0
-			MOV		#$04, Month+1
-
-			MOV		#$01, Year+0
-			MOV		#$04, Year+1
-			
-			
-			; set the time
-			JSR		rtc_set_time
-			
+			; nothing to see here			
 			RTS
 
 ;**************************************************************
