@@ -94,10 +94,10 @@
 <stringAttribute key="com.freescale.mcu.debug.connections.pnehcs08sim.Library" value="hcs08_pne_gdi"/>
 <stringAttribute key="org.eclipse.cdt.launch.DEBUGGER_ID" value="com.freescale.cdt.debug.cw.hc08.HC08Debugger"/>
 <stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="FLASH/EELE465_Lab03.abs"/>
-<stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="EELE465_Lab05"/>
+<stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="EELE465_Lab06"/>
 <stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value="toolchain.config.hcs08.release.1886006476"/>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
-<listEntry value="/EELE465_Lab05"/>
+<listEntry value="/EELE465_Lab06"/>
 </listAttribute>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
 <listEntry value="4"/>

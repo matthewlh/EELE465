@@ -1,7 +1,0 @@
--Ms
--I"$(ProjDirPath)/Project_Headers"
--F2
--AsmDbg
--ViewHidden
--WmsgFob"%f%e:%l:%k:%d %m\n"
--Cs08
