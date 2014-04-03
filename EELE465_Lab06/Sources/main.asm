@@ -38,6 +38,8 @@
             
             XREF rtc_init, rtc_set_time, rtc_get_time, rtc_display_data, rtc_prompt_time
             XREF Sec, Min, Hour, Date, Month, Year
+            
+            XREF lm92_init, lm92_read_temp
 
 
 ; variable/data section
@@ -100,12 +102,15 @@ _Startup:
 			JSR		rtc_init
 			LDA		#$01
 			STA		rtc_set
+			
+			; lm92_init
+			JSR		lm92_init
             
 			CLI			; enable interrupts
 			
 			; set rtc
-			JSR		rtc_prompt_time
-			JSR		rtc_set_time
+			;JSR		rtc_prompt_time
+			;JSR		rtc_set_time
 			LDA		#$00
 			STA		rtc_set
 			
@@ -123,7 +128,10 @@ mainLoop:
 ;* Entry Variables: None
 ;* Exit Variables: None 
 ;**************************************************************
-_Vtpmovf:   
+_Vtpmovf: 
+
+			; read temp
+  			JSR		lm92_read_temp
 
 			; check if rtc is ready
 			LDA		rtc_set

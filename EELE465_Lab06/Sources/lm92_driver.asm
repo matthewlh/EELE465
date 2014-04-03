@@ -9,16 +9,16 @@
 
 ; EQU statements
 
-LM92_ADDR_W 		EQU $80 	; Slave address to write to LM92
-LM92_ADDR_R 		EQU $81 	; Slave address to read from LM92
+LM92_ADDR_W 		EQU $90 	; Slave address to write to LM92
+LM92_ADDR_R 		EQU $91 	; Slave address to read from LM92
 
-LM92_REG_			EQU	$00		; register address of the seconds register
+LM92_REG_TEMP		EQU	$00		; register address of the seconds register
 
 ; Include derivative-specific definitions
             INCLUDE 'MC9S08QG8.inc'
             
 ; export symbols
-            XDEF lm92_init
+            XDEF lm92_init, lm92_read_temp
             
 ; import symbols
 			XREF i2c_init, i2c_start, i2c_stop, i2c_tx_byte, i2c_rx_byte
@@ -52,6 +52,55 @@ MyCode:     SECTION
 ;**************************************************************
 lm92_init:
 			; nothing to see here			
+			RTS
+
+;**************************************************************
+
+;************************************************************** 
+;* Subroutine Name: lm92_read_temp  
+;* Description: Read temperature from LM92
+;* 
+;* Registers Modified: None
+;* Entry Variables: None
+;* Exit Variables: None
+;**************************************************************
+lm92_read_temp:
+
+			; start condition
+			JSR		i2c_start
+			
+			; send rtc write addr
+			LDA		#LM92_ADDR_W
+			JSR 	i2c_tx_byte
+			
+			; send register address
+			LDA		#LM92_REG_TEMP
+			JSR 	i2c_tx_byte
+			
+			; stop condition
+			JSR		i2c_stop
+						
+
+			; start condition
+			JSR		i2c_start
+			
+			; send rtc read addr
+			LDA		#LM92_ADDR_R
+			JSR 	i2c_tx_byte
+			
+			; read byte
+			LDA		#$01			; ack the byte			
+			JSR		i2c_rx_byte	
+			
+			; read byte
+			LDA		#$00			; nack the byte			
+			JSR		i2c_rx_byte	
+			
+			; stop condition
+			JSR		i2c_stop
+
+
+			; done			
 			RTS
 
 ;**************************************************************
