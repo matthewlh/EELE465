@@ -36,10 +36,10 @@
             
             XREF i2c_init, i2c_start, i2c_stop, i2c_tx_byte, i2c_rx_byte
             
-            XREF rtc_init, rtc_set_time, rtc_get_time, rtc_display_data, rtc_prompt_time
+            XREF rtc_init, rtc_set_time_zero, rtc_calc_tod, rtc_write_tod, rtc_set_time, rtc_get_time, rtc_display_data, rtc_prompt_time
             XREF Sec, Min, Hour, Date, Month, Year
             
-            XREF lm92_init, lm92_read_temp
+            XREF lm92_init, lm92_read_temp, lm92_write_lcd
 
 
 ; variable/data section
@@ -57,13 +57,11 @@ MY_ZEROPAGE: SECTION  SHORT
 MY_CONST: SECTION
 ; Constant Values and Tables Section
 
-			str_prompt:			DC.B 	"Enter n: "	
-			str_prompt_length:	DC.B	9	
-
-			str_TK:				DC.B 	"T,K:"	
-			str_TK_length:		DC.B	4	
-			str_TC:				DC.B 	" T,C:"	
-			str_TC_length:		DC.B	5		
+			str_top:			DC.B 	"TEC State:      "	
+			str_top_length:		DC.B	16
+			
+			str_bottom:			DC.B 	"T92:   K@T=   s "	
+			str_bottom_length:	DC.B	16	
 			
 ; code section
 MyCode:     SECTION
@@ -109,10 +107,7 @@ _Startup:
 			CLI			; enable interrupts
 			
 			; set rtc
-			;JSR		rtc_prompt_time
-			;JSR		rtc_set_time
-			LDA		#$00
-			STA		rtc_set
+			JSR		rtc_set_time_zero
 			
 mainLoop:			
 			feed_watchdog
@@ -129,52 +124,51 @@ mainLoop:
 ;* Exit Variables: None 
 ;**************************************************************
 _Vtpmovf: 
-
   			; clear lcd
   			JSR		lcd_clear
   			
-			; read temp
-  			JSR		lm92_read_temp
+; write lcd template string
+  			JSR		lcd_clear
   			
-  			; write upper number to LCD
-			LDHX	#$000A
-			DIV						; A <= (H:A)/(X), H <= (remainder)
-
-			; convert to ASCII char
-			JSR		lcd_num_to_char
-
-			; write to LCD
-			JSR		lcd_char
-
-			; move remainder from H to A
-			PSHH
-			PULA
-
-			; convert to ASCII char
-			JSR		lcd_num_to_char
-
-			; write to LCD
-			JSR		lcd_char
+  			JSR		lcd_goto_row0  			
+			LDHX	#str_top
+			LDA		str_top_length
+			JSR		lcd_str
   			
-
-			; check if rtc is ready
-			LDA		rtc_set
-			BNE		_Vtpmovf_heartbeat
-
-			; read rtc time
-			JSR		rtc_get_time
+  			JSR		lcd_goto_row1  			
+			LDHX	#str_bottom
+			LDA		str_bottom_length
+			JSR		lcd_str
 			
-			; display RTC time on LCD
-			;JSR		rtc_display_data
+; write LM92 temp
+			; set LCD cursor position
+			LDA		#$C4
+			JSR		lcd_goto_addr
 			
-			; update heatbeat led
-			JSR		led_write
+			JSR		lm92_read_temp
+			JSR		lm92_write_lcd 			
+  			
+; write time
+			; set LCD cursor position
+			LDA		#$CB
+			JSR		lcd_goto_addr
+  			
+  			; read time from RTC
+  			JSR		rtc_get_time
+			
+			JSR		rtc_calc_tod
+			JSR		rtc_write_tod
+
+			
 			          
-_Vtpmovf_heartbeat:			          
+_Vtpmovf_heartbeat:
+
+			; update heatbeat led
+			JSR		led_write			          
 			          
 			; Toggle Heartbeat LED			
 			LDA		led_data			; load current LED pattern
-			EOR		#$80				; toggle bit 7
+			EOR		#$01				; toggle bit 1
 			STA		led_data			; Store pattern to var		
 			
 			; clear TPM ch0 flag

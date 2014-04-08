@@ -17,8 +17,8 @@ RTC_REG_SEC		EQU	$00		; register address of the seconds register
             INCLUDE 'MC9S08QG8.inc'
             
 ; export symbols
-            XDEF rtc_init, rtc_set_time, rtc_get_time, rtc_display_data, rtc_prompt_time
-            XDEF Sec, Min, Hour, Date, Month, Year 
+            XDEF rtc_init, rtc_set_time_zero, rtc_calc_tod, rtc_write_tod, rtc_set_time, rtc_get_time, rtc_display_data, rtc_prompt_time
+            XDEF Sec, Min, Hour, Date, Month, Year
             
 ; import symbols
 			XREF i2c_init, i2c_start, i2c_stop, i2c_tx_byte, i2c_rx_byte
@@ -32,12 +32,16 @@ RTC_REG_SEC		EQU	$00		; register address of the seconds register
 ; variable/data section
 MY_ZEROPAGE: SECTION  SHORT
 
-			Sec:				DS.B	2
-			Min:				DS.B	2
+			Sec:				DS.B	2		; normally holds last time read from RTC, 
+			Min:				DS.B	2		; written to prior to calling rtc_set_time
 			Hour:				DS.B	2
 			Date:				DS.B	2
 			Month:				DS.B	2
 			Year:				DS.B	2
+						
+			TOD:				DS.B	3		; time of day in seconds since midnight
+			
+			rtc_epoch_delta:	DS.B	2
 			
 			Byte_counter:		DS.B	1
 
@@ -70,6 +74,121 @@ rtc_init:
 			; nothing to see here			
 			RTS
 
+;**************************************************************
+
+
+;************************************************************** 
+;* Subroutine Name: rtc_set_time_zero  
+;* Description: Sets the RTC to time zero
+;* 
+;* Registers Modified: A, X
+;* Entry Variables: None
+;* Exit Variables: None
+;**************************************************************
+rtc_set_time_zero:
+
+			MOV		#$00, Sec
+			MOV		#$00, Min
+			MOV		#$00, Hour
+			MOV		#$00, Date
+			MOV		#$00, Month
+			MOV		#$00, Year
+			
+			JSR		rtc_set_time
+
+			;done
+			RTS
+
+;**************************************************************
+
+
+;************************************************************** 
+;* Subroutine Name: rtc_calc_tod
+;* Description: 
+;* 
+;* Registers Modified: A, X
+;* Entry Variables: None
+;* Exit Variables: None
+;**************************************************************
+rtc_calc_tod:
+
+			; clear TOD var
+			MOV		#$00, TOD+0
+			MOV		#$00, TOD+1
+			
+;*** calculate seconds
+			MOV		Sec, TOD+1
+			
+;*** calculate minutes
+			LDA		Min
+			LDX		#$3C 			; 0x3C = 60
+			MUL						; X:A <= (X) * (A)
+			
+			; add lower byte of result
+			ADD		TOD+1
+			STA		TOD+1
+			
+			; add upper byte of result
+			PSHX
+			PULA
+			ADC		TOD+0
+			STA		TOD+0
+			
+;*** calculate hours
+
+			; use Byte_counter as loop counter
+			LDA		Hour
+			STA		Byte_counter
+			
+			BEQ		rtc_time_to_seconds_done
+			
+loop_hours:
+			; add 3600 seconds for each hour, 0x0E10 = 3600
+			LDA		TOD+1
+			ADD		#$10
+			STA		TOD+1
+			
+			LDA		TOD+0
+			ADC		#$0E
+			STA		TOD+0
+			
+			; decrement counter and check if done
+			LDA		Byte_counter
+			DECA
+			STA		Byte_counter
+			BNE		loop_hours
+			
+			
+rtc_time_to_seconds_done:
+
+			;done
+			RTS
+
+;**************************************************************
+
+
+;************************************************************** 
+;* Subroutine Name: rtc_write_tod
+;* Description: 
+;* 
+;* Registers Modified: A, X
+;* Entry Variables: None
+;* Exit Variables: rtc_delta
+;**************************************************************
+rtc_write_tod:
+			
+			LDA		#'0'
+			JSR		lcd_char
+			
+			LDA		#'0'
+			JSR		lcd_char
+			
+			LDA		#'0'
+			JSR		lcd_char			
+			
+			; done
+			RTS
+			
 ;**************************************************************
 
 

@@ -126,7 +126,7 @@ lcd_init:
 			JSR		lcd_write
 
 			LDA		#$08
-			JSR		lcd_write ; goes blank here
+			JSR		lcd_write
 
 
 ;*** Send display ctrl command
@@ -134,7 +134,7 @@ lcd_init:
 			LDA		#$00
 			JSR		lcd_write
 
-			LDA		#$0F
+			LDA		#$0C
 			JSR		lcd_write
 
 ;*** Send display clear command
