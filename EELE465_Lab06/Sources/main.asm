@@ -67,9 +67,9 @@ MY_CONST: SECTION
 			str_bottom:			DC.B 	"T92:   K@T=000s "	
 			str_bottom_length:	DC.B	16	
 			
-			str_tec_heat:		DC.B 	"heat"
-			str_tec_cool:		DC.B 	"cool"
-			str_tec_off:		DC.B 	"off "	
+			str_tec_heat:		DC.B 	"Heat"
+			str_tec_cool:		DC.B 	"Cool"
+			str_tec_off:		DC.B 	"Off "	
 			str_tec_length:		DC.B	4	
 			
 ; code section
@@ -222,7 +222,7 @@ update_devices:
 			
 ; write TEC state
 			; set LCD cursor position
-			LDA		#$8B
+			LDA		#$8A
 			JSR		lcd_goto_addr	
 
 			LDA		TEC_state
