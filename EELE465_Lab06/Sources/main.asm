@@ -54,14 +54,23 @@ MY_ZEROPAGE: SECTION  SHORT
 			
 			rtc_set:			DS.B	1		; 0x01 when the rtc has been set, 0x00 otherwise
 			
+			update_needed:		DS.B	1		; 0x01 when an update of the LEDs, LCD, or TEC is needed, 0x00 otherwise
+			
+			TEC_state:			DS.B	1		; 		
+			
 MY_CONST: SECTION
 ; Constant Values and Tables Section
 
 			str_top:			DC.B 	"TEC State:      "	
 			str_top_length:		DC.B	16
 			
-			str_bottom:			DC.B 	"T92:   K@T=   s "	
+			str_bottom:			DC.B 	"T92:   K@T=000s "	
 			str_bottom_length:	DC.B	16	
+			
+			str_tec_heat:		DC.B 	"heat"
+			str_tec_cool:		DC.B 	"cool"
+			str_tec_off:		DC.B 	"off "	
+			str_tec_length:		DC.B	4	
 			
 ; code section
 MyCode:     SECTION
@@ -101,11 +110,50 @@ _Startup:
 			
 			; lm92_init
 			JSR		lm92_init
+			
+			; initially TEC off
+			MOV		#$00, TEC_state
+			
+			; set update_needed
+			MOV		#$01, update_needed
             
 			CLI			; enable interrupts
 			
 mainLoop:			
 			feed_watchdog
+			
+			; scan keypad
+			JSR		keypad_scan
+			JSR		keypad_interpret
+			
+			; was a key pressed?
+			CBEQA	#$FF, mainLoop_cont
+			
+			; key was pressed, so consider it our new state
+			STA		TEC_state
+			
+			; update TEC data (led_data)
+			LDA		led_data
+			AND		#$FC
+			STA		led_data
+			
+			LDA		TEC_state
+			AND		#$03
+			ORA		led_data
+			STA		led_data
+			
+			; since key was pressed, zero the time
+			JSR		rtc_set_time_zero
+			
+			; set update_needed
+			MOV		#$01, update_needed
+			
+mainLoop_cont:	
+			; do we need to update stuff?
+			LDA		update_needed
+			BEQ		mainLoop
+			
+			JSR		update_devices		
  
 			BRA		mainLoop
 
@@ -118,10 +166,47 @@ mainLoop:
 ;* Entry Variables: None
 ;* Exit Variables: None 
 ;**************************************************************
-_Vtpmovf: 
-  			; clear lcd
-  			JSR		lcd_clear
-  			
+_Vtpmovf:          
+
+			; read LM92 every-other time (when heartbeat LED is On) 
+			LDA		led_data
+			AND		#$80
+			BEQ		_Vtpmovf_heartbeat
+			JSR		lm92_read_temp
+
+_Vtpmovf_heartbeat:			          
+			; Toggle Heartbeat LED			
+			LDA		led_data			; load current LED pattern
+			EOR		#$80				; toggle bit 7
+			STA		led_data			; Store pattern to var		
+			
+			; clear TPM ch0 flag
+			LDA		TPMSC				; read register
+			AND		#$4E				; clear CH0F bit, but leav others alone
+			STA		TPMSC				; write back register
+			
+			; set update_needed
+			MOV		#$01, update_needed
+
+			; Done, Return from Interrupt
+			RTI
+			
+			
+;**************************************************************
+
+;************************************************************** 
+;* Subroutine Name: update_devices 
+;* Description: 
+;*
+;* Registers Modified: A, update_needed
+;* Entry Variables: None
+;* Exit Variables: None 
+;**************************************************************
+update_devices:
+
+; Update LEDs and TEC
+			JSR		led_write		
+
 ; write lcd template string
   			JSR		lcd_clear
   			
@@ -135,15 +220,43 @@ _Vtpmovf:
 			LDA		str_bottom_length
 			JSR		lcd_str
 			
+; write TEC state
+			; set LCD cursor position
+			LDA		#$8B
+			JSR		lcd_goto_addr	
+
+			LDA		TEC_state
+			CBEQA	#$01, update_devices_tec_heat
+			CBEQA	#$02, update_devices_tec_cool 
+
+update_devices_tec_off:
+			LDHX	#str_tec_off			
+			BRA		update_devices_tec_write
+						
+update_devices_tec_heat:
+			LDHX	#str_tec_heat			
+			BRA		update_devices_tec_write
+
+update_devices_tec_cool:
+			LDHX	#str_tec_cool			
+			BRA		update_devices_tec_write
+
+update_devices_tec_write:
+			LDA		str_tec_length
+			JSR		lcd_str
+
+						
 ; write LM92 temp
 			; set LCD cursor position
 			LDA		#$C4
-			JSR		lcd_goto_addr
-			
-			JSR		lm92_read_temp
+			JSR		lcd_goto_addr			
 			JSR		lm92_write_lcd 			
   			
 ; write time
+			; if TEC is off, don't overwrite the 000s for time
+			LDA		TEC_state
+			CBEQA	#$00, update_devices_done
+
 			; set LCD cursor position
 			LDA		#$CB
 			JSR		lcd_goto_addr
@@ -154,28 +267,14 @@ _Vtpmovf:
 			; calc and write TOD
 			JSR		rtc_calc_tod
 			JSR		rtc_write_tod
+			
+			BRA 	update_devices_done
+			
+update_devices_done:
+;*** done
+			MOV		#$00, update_needed
+			RTS
 
-			
-			          
-_Vtpmovf_heartbeat:
-
-			; update heatbeat led
-			JSR		led_write			          
-			          
-			; Toggle Heartbeat LED			
-			LDA		led_data			; load current LED pattern
-			EOR		#$01				; toggle bit 1
-			STA		led_data			; Store pattern to var		
-			
-			; clear TPM ch0 flag
-			LDA		TPMSC				; read register
-			AND		#$4E				; clear CH0F bit, but leav others alone
-			STA		TPMSC				; write back register
-
-			; Done, Return from Interrupt
-			RTI
-			
-			
 ;**************************************************************
 
 

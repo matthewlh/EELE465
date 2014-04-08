@@ -32,6 +32,7 @@ MY_ZEROPAGE: SECTION  SHORT
 
 			Temp_Data_Raw:		DS.B	2
 			
+			Temp_c:				DS.B	1			
 			temp_k:				DS.B	1			
 
 MY_CONST: SECTION
@@ -112,6 +113,8 @@ lm92_read_temp:
 			LDA		Temp_Data_Raw+1
 			
 			DIV		; A <- (H:A)/(X)
+			
+			STA		Temp_c
 
 			; done			
 			RTS
@@ -124,10 +127,12 @@ lm92_read_temp:
 ;* Description: Writes the temperature in Accu A to the LCD.
 ;* 
 ;* Registers Modified: Accu A
-;* Entry Variables: A - Input temperature
+;* Entry Variables: Temp_c
 ;* Exit Variables: None
 ;**************************************************************
 lm92_write_lcd:
+
+			LDA		Temp_c
 			
 			; temp >= 27 C == 300 K?
 			CMP		#$1B
