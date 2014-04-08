@@ -39,7 +39,7 @@ MY_ZEROPAGE: SECTION  SHORT
 			Month:				DS.B	2
 			Year:				DS.B	2
 						
-			TOD:				DS.B	3		; time of day in seconds since midnight
+			TOD:				DS.B	2		; time of day in seconds since midnight
 			
 			rtc_epoch_delta:	DS.B	2
 			
@@ -70,8 +70,10 @@ MyCode:     SECTION
 ;* Entry Variables: None
 ;* Exit Variables: None
 ;**************************************************************
-rtc_init:
-			; nothing to see here			
+rtc_init:	
+			; set rtc
+			JSR		rtc_set_time_zero
+						
 			RTS
 
 ;**************************************************************
@@ -87,12 +89,23 @@ rtc_init:
 ;**************************************************************
 rtc_set_time_zero:
 
-			MOV		#$00, Sec
-			MOV		#$00, Min
-			MOV		#$00, Hour
-			MOV		#$00, Date
-			MOV		#$00, Month
-			MOV		#$00, Year
+			MOV		#$00, Sec+0
+			MOV		#$00, Sec+1
+			
+			MOV		#$00, Min+0			
+			MOV		#$00, Min+1
+			
+			MOV		#$00, Hour+0
+			MOV		#$00, Hour+1
+			
+			MOV		#$00, Date+0
+			MOV		#$01, Date+1
+			
+			MOV		#$00, Month+0
+			MOV		#$01, Month+1
+			
+			MOV		#$00, Year+0
+			MOV		#$01, Year+1
 			
 			JSR		rtc_set_time
 
@@ -117,10 +130,22 @@ rtc_calc_tod:
 			MOV		#$00, TOD+1
 			
 ;*** calculate seconds
-			MOV		Sec, TOD+1
+			LDA		Sec+1
+			STA		TOD+1
+			
+			LDA		Sec+0
+			LDX		#$0A
+			MUL						; X:A <= (X) * (A)
+			ADD		TOD+1
+			STA		TOD+1
+			
+			PSHX
+			PULA
+			ADC		TOD+0
+			STA		TOD+0
 			
 ;*** calculate minutes
-			LDA		Min
+			LDA		Min+1
 			LDX		#$3C 			; 0x3C = 60
 			MUL						; X:A <= (X) * (A)
 			
@@ -133,33 +158,6 @@ rtc_calc_tod:
 			PULA
 			ADC		TOD+0
 			STA		TOD+0
-			
-;*** calculate hours
-
-			; use Byte_counter as loop counter
-			LDA		Hour
-			STA		Byte_counter
-			
-			BEQ		rtc_time_to_seconds_done
-			
-loop_hours:
-			; add 3600 seconds for each hour, 0x0E10 = 3600
-			LDA		TOD+1
-			ADD		#$10
-			STA		TOD+1
-			
-			LDA		TOD+0
-			ADC		#$0E
-			STA		TOD+0
-			
-			; decrement counter and check if done
-			LDA		Byte_counter
-			DECA
-			STA		Byte_counter
-			BNE		loop_hours
-			
-			
-rtc_time_to_seconds_done:
 
 			;done
 			RTS
@@ -177,13 +175,41 @@ rtc_time_to_seconds_done:
 ;**************************************************************
 rtc_write_tod:
 			
-			LDA		#'0'
+
+;*** write upper number to LCD
+			LDHX	TOD+0
+			LDX		#$64
+			LDA		TOD+1			
+			DIV						; A <= (H:A)/(X), H <= (remainder)
+
+			; convert to ASCII char
+			JSR		lcd_num_to_char
+
+			; write to LCD
 			JSR		lcd_char
+
+;*** write middle number to LCD
+			PSHH
+			PULA
+
+			LDHX	#$000A
+			DIV						; A <= (H:A)/(X), H <= (remainder)
 			
-			LDA		#'0'
-			JSR		lcd_char
+			; convert to ASCII char
+			JSR		lcd_num_to_char
+
+			; write to LCD
+			JSR		lcd_char		
 			
-			LDA		#'0'
+
+;*** write lower number to LCD
+			PSHH
+			PULA
+
+			; convert to ASCII char
+			JSR		lcd_num_to_char
+
+			; write to LCD
 			JSR		lcd_char			
 			
 			; done

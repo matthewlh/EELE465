@@ -97,17 +97,12 @@ _Startup:
 			JSR		i2c_init
 			
 			; init rtc
-			JSR		rtc_init
-			LDA		#$01
-			STA		rtc_set
+			JSR		rtc_init		
 			
 			; lm92_init
 			JSR		lm92_init
             
 			CLI			; enable interrupts
-			
-			; set rtc
-			JSR		rtc_set_time_zero
 			
 mainLoop:			
 			feed_watchdog
@@ -156,6 +151,7 @@ _Vtpmovf:
   			; read time from RTC
   			JSR		rtc_get_time
 			
+			; calc and write TOD
 			JSR		rtc_calc_tod
 			JSR		rtc_write_tod
 
