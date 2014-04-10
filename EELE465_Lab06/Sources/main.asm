@@ -56,9 +56,13 @@ MY_ZEROPAGE: SECTION  SHORT
 			
 			update_needed:		DS.B	1		; 0x01 when an update of the LEDs, LCD, or TEC is needed, 0x00 otherwise
 			
-			TEC_state:			DS.B	1		; 0, 1, 2 for off, heat, cool repsectively
+			TEC_state:			DS.B	1		; In Mode A: 0=off,  1=heat, 2=cool
+												; In Mode B: 0=hold, 1=heat, 2=cool
 			
-			mode:				DS.B	1		; Mode; 0x0A = A, 0x0B = B, 0x00 = Waiting for mode		
+			mode:				DS.B	1		; Mode; 0x0A = A, 0x0B = B, 0x00 = Waiting for mode	
+			
+			Tset:				DS.B	1		; set point temperature, for mode B
+			Tcur:				DS.B	1		; current temperature, for mode B	
 			
 MY_CONST: SECTION
 ; Constant Values and Tables Section
@@ -70,6 +74,15 @@ MY_CONST: SECTION
 			str_A_top_length:		DC.B	16			
 			str_A_bottom:			DC.B 	"T92:   K@T=000s "	
 			str_A_bottom_length:	DC.B	16	
+			
+			str_B_top_heat:			DC.B 	"TEC State:HeatXX"	
+			str_B_top_heat_length:	DC.B	16			
+			str_B_top_cool:			DC.B 	"TEC State:CoolXX"	
+			str_B_top_cool_length:	DC.B	16			
+			str_B_top_hold:			DC.B 	"TEC State:HoldXX"	
+			str_B_top_hold_length:	DC.B	16			
+			str_B_bottom:			DC.B 	"T92:   K@T=000s "	
+			str_B_bottom_length:	DC.B	16	
 			
 			str_tec_heat:			DC.B 	"Heat"
 			str_tec_cool:			DC.B 	"Cool"
@@ -126,13 +139,25 @@ _Startup:
 			CLI			; enable interrupts
 			
 ;************************************************************** 
-;* Subroutine Name: A_mainLoop 
-;* Description: Main loop for mode A
+;* Subroutine Name: restart 
+;* Description: Restart loop for startup and when the user
+;*				wants to change modes.
 ;* Registers Modified: A,X,H
 ;* Entry Variables: None
 ;* Exit Variables: None 
 ;**************************************************************			
 restart:
+			; set mode
+			MOV		#$00, mode
+			
+			; turn TEC off
+			LDA		led_data
+			AND		#$FC
+			STA		led_data
+			
+			; reset state
+			MOV		#$00, TEC_state
+			
 			; put prompt on LCD	
   			JSR		lcd_clear
   			
@@ -158,7 +183,7 @@ restart_loop:
 			CBEQA	#$0A, A_mainLoop
 			
 			; was 'B' pressed?
-			;CBEQA	#$0A, B_mainLoop
+			CBEQA	#$0A, B_mainLoop
 			
 			BRA		restart_loop
 
@@ -171,6 +196,9 @@ restart_loop:
 ;* Exit Variables: None 
 ;**************************************************************
 A_mainLoop:			
+			; set mode
+			MOV		#$0A, mode
+
 			feed_watchdog
 			
 			; scan keypad
@@ -213,7 +241,52 @@ A_mainLoop_cont:
 			
 ;**************************************************************
 
+;************************************************************** 
+;* Subroutine Name: B_mainLoop 
+;* Description: Main loop for mode B
+;* Registers Modified: A,X,H
+;* Entry Variables: None
+;* Exit Variables: None 
+;**************************************************************
+B_mainLoop:			
+			; set mode
+			MOV		#$0B, mode
 
+			feed_watchdog
+			
+			; scan keypad
+			JSR		keypad_scan
+			JSR		keypad_interpret
+			
+			; was '*' pressed
+			CBEQA	#$0E, restart
+			
+			; if state = 0x00, do nothing
+			LDA		state
+			BEQ		B_mainLoop_cont	
+			
+B_mainLoop_checkHold:			
+			; if Tset = Tcur, change state to hold
+			LDA		Tset
+			CBEQA	Tcur, B_mainLoop_hold
+			
+			; else do nothing
+			BRA		B_mainLoop_cont
+			
+B_mainLoop_hold:			
+			; set state
+			MOV		#$00, state	
+
+B_mainLoop_cont:
+			; do we need to update stuff?
+			LDA		update_needed
+			BEQ		B_mainLoop
+			
+			;JSR		B_update_devices		
+ 
+			BRA		B_mainLoop
+			
+;**************************************************************
 
 ;************************************************************** 
 ;* Subroutine Name: _Vtpmovf 
@@ -230,8 +303,7 @@ _Vtpmovf:
 			CBEQA	#$0A, _Vtpmovf_A
 			CBEQA	#$0B, _Vtpmovf_B 
 
-_Vtpmovf_wait:
-			; do nothing, except update heartbeat LED
+			; not in Mode A or B, so do nothing, except update heartbeat LED
 			BRA		_Vtpmovf_heartbeat
 
 _Vtpmovf_A:
