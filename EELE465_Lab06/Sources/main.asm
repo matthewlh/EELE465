@@ -56,21 +56,25 @@ MY_ZEROPAGE: SECTION  SHORT
 			
 			update_needed:		DS.B	1		; 0x01 when an update of the LEDs, LCD, or TEC is needed, 0x00 otherwise
 			
-			TEC_state:			DS.B	1		; 		
+			TEC_state:			DS.B	1		; 0, 1, 2 for off, heat, cool repsectively
+			
+			mode:				DS.B	1		; Mode; 0x0A = A, 0x0B = B, 0x00 = Waiting for mode		
 			
 MY_CONST: SECTION
 ; Constant Values and Tables Section
+			
+			str_start:				DC.B 	"Mode: A,B?      "	
+			str_start_length:		DC.B	16
 
-			str_top:			DC.B 	"TEC State:      "	
-			str_top_length:		DC.B	16
+			str_A_top:				DC.B 	"TEC State:      "	
+			str_A_top_length:		DC.B	16			
+			str_A_bottom:			DC.B 	"T92:   K@T=000s "	
+			str_A_bottom_length:	DC.B	16	
 			
-			str_bottom:			DC.B 	"T92:   K@T=000s "	
-			str_bottom_length:	DC.B	16	
-			
-			str_tec_heat:		DC.B 	"Heat"
-			str_tec_cool:		DC.B 	"Cool"
-			str_tec_off:		DC.B 	"Off "	
-			str_tec_length:		DC.B	4	
+			str_tec_heat:			DC.B 	"Heat"
+			str_tec_cool:			DC.B 	"Cool"
+			str_tec_off:			DC.B 	"Off "	
+			str_tec_length:			DC.B	4	
 			
 ; code section
 MyCode:     SECTION
@@ -116,10 +120,57 @@ _Startup:
 			
 			; set update_needed
 			MOV		#$01, update_needed
+			
+			; set mode
             
 			CLI			; enable interrupts
 			
-mainLoop:			
+;************************************************************** 
+;* Subroutine Name: A_mainLoop 
+;* Description: Main loop for mode A
+;* Registers Modified: A,X,H
+;* Entry Variables: None
+;* Exit Variables: None 
+;**************************************************************			
+restart:
+			; put prompt on LCD	
+  			JSR		lcd_clear
+  			
+  			JSR		lcd_goto_row0  			
+			LDHX	#str_start
+			LDA		str_start_length
+			JSR		lcd_str
+			
+			; set update_needed
+			MOV		#$01, update_needed
+
+restart_loop:
+			feed_watchdog
+			
+			; update LEDs
+			JSR		led_write
+			
+			; scan keypad
+			JSR		keypad_scan
+			JSR		keypad_interpret
+			
+			; was 'A' pressed?
+			CBEQA	#$0A, A_mainLoop
+			
+			; was 'B' pressed?
+			;CBEQA	#$0A, B_mainLoop
+			
+			BRA		restart_loop
+
+			
+;************************************************************** 
+;* Subroutine Name: A_mainLoop 
+;* Description: Main loop for mode A
+;* Registers Modified: A,X,H
+;* Entry Variables: None
+;* Exit Variables: None 
+;**************************************************************
+A_mainLoop:			
 			feed_watchdog
 			
 			; scan keypad
@@ -127,7 +178,10 @@ mainLoop:
 			JSR		keypad_interpret
 			
 			; was a key pressed?
-			CBEQA	#$FF, mainLoop_cont
+			CBEQA	#$FF, A_mainLoop_cont
+			
+			; was '*' pressed
+			CBEQA	#$0E, restart
 			
 			; key was pressed, so consider it our new state
 			STA		TEC_state
@@ -148,14 +202,18 @@ mainLoop:
 			; set update_needed
 			MOV		#$01, update_needed
 			
-mainLoop_cont:	
+A_mainLoop_cont:	
 			; do we need to update stuff?
 			LDA		update_needed
-			BEQ		mainLoop
+			BEQ		A_mainLoop
 			
-			JSR		update_devices		
+			JSR		A_update_devices		
  
-			BRA		mainLoop
+			BRA		A_mainLoop
+			
+;**************************************************************
+
+
 
 ;************************************************************** 
 ;* Subroutine Name: _Vtpmovf 
@@ -167,13 +225,30 @@ mainLoop_cont:
 ;* Exit Variables: None 
 ;**************************************************************
 _Vtpmovf:          
+			; check mode
+			LDA		mode
+			CBEQA	#$0A, _Vtpmovf_A
+			CBEQA	#$0B, _Vtpmovf_B 
 
+_Vtpmovf_wait:
+			; do nothing, except update heartbeat LED
+			BRA		_Vtpmovf_heartbeat
+
+_Vtpmovf_A:
 			; read LM92 every-other time (when heartbeat LED is On) 
 			LDA		led_data
 			AND		#$80
 			BEQ		_Vtpmovf_heartbeat
 			JSR		lm92_read_temp
+			
+			BRA		_Vtpmovf_heartbeat
 
+_Vtpmovf_B:
+			; always read LM92
+			JSR		lm92_read_temp
+			
+			;BRA		_Vtpmovf_heartbeat
+			
 _Vtpmovf_heartbeat:			          
 			; Toggle Heartbeat LED			
 			LDA		led_data			; load current LED pattern
@@ -202,7 +277,7 @@ _Vtpmovf_heartbeat:
 ;* Entry Variables: None
 ;* Exit Variables: None 
 ;**************************************************************
-update_devices:
+A_update_devices:
 
 ; Update LEDs and TEC
 			JSR		led_write		
@@ -211,13 +286,13 @@ update_devices:
   			JSR		lcd_clear
   			
   			JSR		lcd_goto_row0  			
-			LDHX	#str_top
-			LDA		str_top_length
+			LDHX	#str_A_top
+			LDA		str_A_top_length
 			JSR		lcd_str
   			
   			JSR		lcd_goto_row1  			
-			LDHX	#str_bottom
-			LDA		str_bottom_length
+			LDHX	#str_A_bottom
+			LDA		str_A_bottom_length
 			JSR		lcd_str
 			
 ; write TEC state
@@ -226,22 +301,22 @@ update_devices:
 			JSR		lcd_goto_addr	
 
 			LDA		TEC_state
-			CBEQA	#$01, update_devices_tec_heat
-			CBEQA	#$02, update_devices_tec_cool 
+			CBEQA	#$01, A_update_devices_tec_heat
+			CBEQA	#$02, A_update_devices_tec_cool 
 
-update_devices_tec_off:
+A_update_devices_tec_off:
 			LDHX	#str_tec_off			
-			BRA		update_devices_tec_write
+			BRA		A_update_devices_tec_write
 						
-update_devices_tec_heat:
+A_update_devices_tec_heat:
 			LDHX	#str_tec_heat			
-			BRA		update_devices_tec_write
+			BRA		A_update_devices_tec_write
 
-update_devices_tec_cool:
+A_update_devices_tec_cool:
 			LDHX	#str_tec_cool			
-			BRA		update_devices_tec_write
+			BRA		A_update_devices_tec_write
 
-update_devices_tec_write:
+A_update_devices_tec_write:
 			LDA		str_tec_length
 			JSR		lcd_str
 
