@@ -58,6 +58,7 @@ MY_ZEROPAGE: SECTION  SHORT
 			
 			TEC_state:			DS.B	1		; In Mode A: 0=off,  1=heat, 2=cool
 												; In Mode B: 0=hold, 1=heat, 2=cool
+			new_TEC_state:		DS.B	1
 			
 			mode:				DS.B	1		; Mode; 0x0A = A, 0x0B = B, 0x00 = Waiting for mode	
 			
@@ -149,8 +150,9 @@ _Startup:
 ;* Exit Variables: None 
 ;**************************************************************			
 restart:
-			; set mode
+			; reset mode & Tset
 			MOV		#$00, mode
+			MOV		#$00, Tset
 			
 			; turn TEC off
 			LDA		led_data
@@ -254,6 +256,12 @@ jmp_restart:
 ;* Exit Variables: None 
 ;**************************************************************
 B_mainLoop_start:
+
+			; set mode
+			MOV		#$0B, mode
+			
+			; set TEC_state so that state change forced on first iteration
+			MOV		#$10, TEC_state
 			
 			; prompt for Tset
 			JSR		lcd_goto_row0
@@ -267,12 +275,9 @@ B_mainLoop_start:
 			JSR		lcd_str
 			
 B_mainLoop_start_loop:	
-		
-			; set mode
-			MOV		#$0B, mode
 
-			feed_watchdog			
-			
+			feed_watchdog
+						
 			; scan keypad
 			JSR		keypad_scan
 			JSR		keypad_interpret
@@ -286,16 +291,34 @@ B_mainLoop_start_loop:
 			; was nothing presed
 			CBEQA	#$FF, B_mainLoop_start_loop
 			
-			;*** read in Tset here ***
+			; else, something was pressed, save it
+			STA		temp
 			
-			
+			; is this the second digit?
+			LDA		Tset
+			BNE		B_mainLoop_start_2nd_digit
+
+B_mainLoop_start_1st_digit:
+
+			; multiply by 10
+			LDHX	#$000A
+			LDA		temp
+			MUL			; X:A <= (X) * (A)
+			STA		Tset
+
+			; wait for next digit
 			BRA		B_mainLoop_start_loop
 			
+B_mainLoop_start_2nd_digit:
+			
+			; Add the digit to Tset
+			ADD		temp
+			STA		Tset
+			
+			; wait for '#' key press
+			BRA		B_mainLoop_start_loop
 			
 B_mainLoop:			
-			; set mode
-			MOV		#$0B, mode
-
 			feed_watchdog
 			
 			; scan keypad
@@ -305,22 +328,54 @@ B_mainLoop:
 			; was '*' pressed
 			CBEQA	#$0E, jmp_restart
 			
-			; if state = 0x00, do nothing
-			LDA		TEC_state
-			BEQ		B_mainLoop_cont	
-			
-B_mainLoop_checkHold:			
-			; if Tset = Tcur, change state to hold
+			; compare Tset with Tcur
 			LDA		Tset
-			CBEQ	Tcur, B_mainLoop_hold
+			CMP		Tcur
 			
-			; else do nothing
-			BRA		B_mainLoop_cont
+			; if Tset < Tcur, cool
+			BHI		B_mainLoop_cool
 			
-B_mainLoop_hold:			
-			; set state
-			MOV		#$00, TEC_state	
+			; else if Tset > Tcur, heat
+			BLO		B_mainLoop_heat
+			
+			; else, hold
+			BRA		B_mainLoop_hold
+			
+B_mainLoop_heat:
+			MOV		#$02, new_TEC_state
+			BRA		B_mainLoop_check_state
 
+B_mainLoop_cool:			
+			MOV		#$01, new_TEC_state
+			BRA		B_mainLoop_check_state
+			
+B_mainLoop_hold:
+			MOV		#$00, new_TEC_state
+
+B_mainLoop_check_state:
+			; new_TEC_state == TEC_state ?
+			LDA		TEC_state
+			CBEQ	new_TEC_state, B_mainLoop_cont
+			
+			; else new_TEC_state != TEC_state		
+			
+B_mainLoop_state_changed:
+			
+			; save new state to current state
+			MOV		new_TEC_state, TEC_state
+			
+			; merge TEC_state with LED_data
+			LDA		led_data
+			AND		#$FC
+			ORA		TEC_state
+			STA		led_data
+			
+			; reset RTC counter
+			JSR		rtc_set_time_zero
+			
+			; set update_needed flag
+			MOV		#$01, update_needed
+			
 B_mainLoop_cont:
 			; do we need to update stuff?
 			LDA		update_needed
@@ -356,12 +411,14 @@ _Vtpmovf_A:
 			AND		#$80
 			BEQ		_Vtpmovf_heartbeat
 			JSR		lm92_read_temp
+			STA		Tcur
 			
 			BRA		_Vtpmovf_heartbeat
 
 _Vtpmovf_B:
 			; always read LM92
 			JSR		lm92_read_temp
+			STA		Tcur
 			
 			;BRA		_Vtpmovf_heartbeat
 			
@@ -538,9 +595,6 @@ B_update_devices_tec_write:
 			JSR		lcd_char			
   			
 ; write time
-			; if TEC is off, don't overwrite the 000s for time
-			LDA		TEC_state
-			CBEQA	#$00, B_update_devices_done
 
 			; set LCD cursor position
 			LDA		#$CB
