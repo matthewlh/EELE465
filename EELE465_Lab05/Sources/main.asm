@@ -1,9 +1,12 @@
 ;************************************************************** 
-;* Program Name: Lab#03 - ADC
-;* Author Names: Matthew Handley 
-;* Date: 2014-02-25
-;* Description: Does stuff and stuff.
-;*
+;* File Name    : 	rtc_driver.asm 
+;* Program Name	: Lab#05 - RTC and I2C
+;* Author Names	: Matthew Handley 
+;* Date			: 2014-04-03
+;* Description	: Prompts user for a date and time, writes that
+;*				  date and time to a DS1337 RTC, then reads the
+;*				  time back every 1 second and displays the time
+;*				  on an LCD.
 ;* 
 ;**************************************************************
 

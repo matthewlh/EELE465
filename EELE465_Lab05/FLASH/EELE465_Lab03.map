@@ -14,6 +14,7 @@ FILE SECTION
 ---------------------------------------------------------------------------------------------
 bus_asm.obj                             Model: SMALL,         Lang: Assembler
 i2c_driver_asm.obj                      Model: SMALL,         Lang: Assembler
+keypad_asm.obj                          Model: SMALL,         Lang: Assembler
 lcd_asm.obj                             Model: SMALL,         Lang: Assembler
 led_asm.obj                             Model: SMALL,         Lang: Assembler
 main_asm.obj                            Model: SMALL,         Lang: Assembler
@@ -29,16 +30,16 @@ SECTION-ALLOCATION SECTION
 Section Name                    Size  Type     From       To       Segment
 ---------------------------------------------------------------------------------------------
 .init                            116     R     0xE000     0xE073   ROM
-MY_ZEROPAGE                       28   R/W       0x60       0x7B   Z_RAM
-MyCode                          1096     R     0xE074     0xE4BB   ROM
-MY_CONST                          18     R     0xE4BC     0xE4CD   ROM
+MY_ZEROPAGE                       34   R/W       0x60       0x81   Z_RAM
+MyCode                          1667     R     0xE074     0xE6F6   ROM
+MY_CONST                          52     R     0xE6F7     0xE72A   ROM
 .stack                            64   R/W      0x100      0x13F   RAM
 .vectSeg0_vect                     2     R     0xFFF0     0xFFF1   .vectSeg0
 .vectSeg1_vect                     2     R     0xFFFE     0xFFFF   .vectSeg1
 
 Summary of section sizes per section type:
-READ_ONLY (R):         4D2 (dec:     1234)
-READ_WRITE (R/W):       5C (dec:       92)
+READ_ONLY (R):         72F (dec:     1839)
+READ_WRITE (R/W):       62 (dec:       98)
 
 *********************************************************************************************
 VECTOR-ALLOCATION SECTION
@@ -54,11 +55,11 @@ OBJECT-ALLOCATION SECTION
 MODULE:                 -- bus_asm.obj --
 - PROCEDURES:
      bus_init                                  E074       A      10       1   MyCode      
-     bus_read                                  E07E      1A      26       0   MyCode      
-     bus_write                                 E098      16      22       3   MyCode      
+     bus_read                                  E07E      1A      26       4   MyCode      
+     bus_write                                 E098      16      22       7   MyCode      
 - VARIABLES:
-     bus_addr                                    60       1       1       5   MY_ZEROPAGE 
-     bus_data                                    61       1       1       5   MY_ZEROPAGE 
+     bus_addr                                    60       1       1      13   MY_ZEROPAGE 
+     bus_data                                    61       1       1      13   MY_ZEROPAGE 
 MODULE:                 -- i2c_driver_asm.obj --
 - PROCEDURES:
      i2c_init                                  E0AE       D      13       1   MyCode      
@@ -83,27 +84,58 @@ MODULE:                 -- i2c_driver_asm.obj --
 - VARIABLES:
      BitCounter                                  62       1       1       5   MY_ZEROPAGE 
      Value                                       63       1       1       5   MY_ZEROPAGE 
+MODULE:                 -- keypad_asm.obj --
+- PROCEDURES:
+     keypad_scan                               E147      8E     142       1   MyCode      
+     keypad_interpret                          E1D5      1C      28       1   MyCode      
+     keypad_interpret_2                        E1F1       F      15       0   MyCode      
+     keypad_interpret_3                        E200       F      15       0   MyCode      
+     keypad_interpret_A                        E20F      11      17       0   MyCode      
+     keypad_interpret_lower_rows_jump          E220       2       2       0   MyCode      
+     keypad_interpret_4                        E222       F      15       0   MyCode      
+     keypad_interpret_5                        E231       F      15       0   MyCode      
+     keypad_interpret_6                        E240       F      15       0   MyCode      
+     keypad_interpret_B                        E24F       C      12       0   MyCode      
+     keypad_interpret_lower_rows               E25B      1B      27       0   MyCode      
+     keypad_interpret_8                        E276       F      15       0   MyCode      
+     keypad_interpret_9                        E285       F      15       0   MyCode      
+     keypad_interpret_C                        E294       E      14       0   MyCode      
+     keypad_interpret_done_jump                E2A2       2       2       0   MyCode      
+     keypad_interpret_E                        E2A4       F      15       0   MyCode      
+     keypad_interpret_0                        E2B3       F      15       0   MyCode      
+     keypad_interpret_F                        E2C2       C      12       0   MyCode      
+     keypad_interpret_D                        E2CE       F      15       0   MyCode      
+     keypad_interpret_done                     E2DD       3       3       0   MyCode      
+     keypad_get_keypress                       E2E0      10      16      12   MyCode      
+- VARIABLES:
+     keypad_data_0                               64       1       1       5   MY_ZEROPAGE 
+     keypad_data_1                               65       1       1       5   MY_ZEROPAGE 
+     keypad_data_0_old                           66       1       1       2   MY_ZEROPAGE 
+     keypad_data_1_old                           67       1       1       2   MY_ZEROPAGE 
+     keypad_data_cmp                             68       1       1      18   MY_ZEROPAGE 
 MODULE:                 -- lcd_asm.obj --
 - PROCEDURES:
-     lcd_init                                  E147      9A     154       1   MyCode      
-     lcd_write                                 E1E1      39      57      20   MyCode      
-     lcd_char                                  E21A      2B      43      17   MyCode      
-     lcd_str                                   E245       2       2       2   MyCode      
-     lcd_str_loop                              E247      18      24       0   MyCode      
-     lcd_num_to_char                           E25F       3       3      12   MyCode      
-     lcd_clear                                 E262      2D      45       1   MyCode      
-     lcd_goto_row0                             E28F       B      11       1   MyCode      
-     lcd_goto_row1                             E29A       B      11       1   MyCode      
+     lcd_init                                  E2F0      9A     154       1   MyCode      
+     lcd_write                                 E38A      39      57      22   MyCode      
+     lcd_char                                  E3C3      2B      43      30   MyCode      
+     lcd_str                                   E3EE       2       2       4   MyCode      
+     lcd_str_loop                              E3F0      18      24       0   MyCode      
+     lcd_num_to_char                           E408       3       3      12   MyCode      
+     lcd_clear                                 E40B      2D      45       2   MyCode      
+     lcd_goto_addr                             E438      10      16       6   MyCode      
+     lcd_goto_row0                             E448       B      11       2   MyCode      
+     lcd_goto_row1                             E453       B      11       2   MyCode      
 - VARIABLES:
-     lcd_data                                    64       1       1       3   MY_ZEROPAGE 
-     lcd_char_data                               65       1       1       2   MY_ZEROPAGE 
-     lcd_col_idx                                 66       1       1       1   MY_ZEROPAGE 
-     str_length                                  67       1       1       3   MY_ZEROPAGE 
+     lcd_data                                    69       1       1       3   MY_ZEROPAGE 
+     lcd_char_data                               6A       1       1       2   MY_ZEROPAGE 
+     lcd_col_idx                                 6B       1       1       1   MY_ZEROPAGE 
+     lcd_addr                                    6C       1       1       2   MY_ZEROPAGE 
+     str_length                                  6D       1       1       3   MY_ZEROPAGE 
 MODULE:                 -- led_asm.obj --
 - PROCEDURES:
-     led_write                                 E2A5      24      36       1   MyCode      
+     led_write                                 E45E      24      36       2   MyCode      
 - VARIABLES:
-     led_data                                    68       1       1       5   MY_ZEROPAGE 
+     led_data                                    6E       1       1       5   MY_ZEROPAGE 
 MODULE:                 -- main_asm.obj --
 - PROCEDURES:
      _Startup                                  E000      27      39       0   .init       
@@ -116,31 +148,36 @@ MODULE:                 -- main_asm.obj --
      SUB_delay_loop_2                          E060      10      16       0   .init       
      SUB_delay_done                            E070       4       4       0   .init       
 - VARIABLES:
-     SUB_delay_cnt                               69       3       3      10   MY_ZEROPAGE 
-     num_samples                                 6C       1       1       0   MY_ZEROPAGE 
-     temp                                        6D       1       1       0   MY_ZEROPAGE 
-     temp_k                                      6E       1       1       0   MY_ZEROPAGE 
+     SUB_delay_cnt                               6F       3       3      10   MY_ZEROPAGE 
+     num_samples                                 72       1       1       0   MY_ZEROPAGE 
+     temp                                        73       1       1       0   MY_ZEROPAGE 
+     temp_k                                      74       1       1       0   MY_ZEROPAGE 
 - LABELS:
      __SEG_END_SSTACK                           140       0       0       1               
 MODULE:                 -- rtc_driver_asm.obj --
 - PROCEDURES:
-     rtc_init                                  E2C9      28      40       1   MyCode      
-     rtc_set_time                              E2F1      5F      95       1   MyCode      
-     rtc_get_time                              E350      6F     111       1   MyCode      
-     rtc_display_data                          E3BF      9C     156       1   MyCode      
-     rtc_mask_data                             E45B      61      97       1   MyCode      
+     rtc_init                                  E482      28      40       1   MyCode      
+     rtc_set_time                              E4AA      5F      95       1   MyCode      
+     rtc_get_time                              E509      6F     111       1   MyCode      
+     rtc_display_data                          E578      9C     156       1   MyCode      
+     rtc_mask_data                             E614      61      97       1   MyCode      
+     rtc_prompt_time                           E675      82     130       0   MyCode      
 - VARIABLES:
-     Sec                                         6F       2       2      12   MY_ZEROPAGE 
-     Min                                         71       2       2      12   MY_ZEROPAGE 
-     Hour                                        73       2       2      12   MY_ZEROPAGE 
-     Date                                        75       2       2      12   MY_ZEROPAGE 
-     Month                                       77       2       2      12   MY_ZEROPAGE 
-     Year                                        79       2       2      12   MY_ZEROPAGE 
-     Byte_counter                                7B       1       1       1   MY_ZEROPAGE 
-     str_date                                  E4BC       8       8       1   MY_CONST    
-     str_date_length                           E4C4       1       1       1   MY_CONST    
-     str_time                                  E4C5       8       8       1   MY_CONST    
-     str_time_length                           E4CD       1       1       1   MY_CONST    
+     Sec                                         75       2       2      14   MY_ZEROPAGE 
+     Min                                         77       2       2      14   MY_ZEROPAGE 
+     Hour                                        79       2       2      14   MY_ZEROPAGE 
+     Date                                        7B       2       2      14   MY_ZEROPAGE 
+     Month                                       7D       2       2      14   MY_ZEROPAGE 
+     Year                                        7F       2       2      14   MY_ZEROPAGE 
+     Byte_counter                                81       1       1       1   MY_ZEROPAGE 
+     str_date                                  E6F7       8       8       1   MY_CONST    
+     str_date_length                           E6FF       1       1       1   MY_CONST    
+     str_time                                  E700       8       8       1   MY_CONST    
+     str_time_length                           E708       1       1       1   MY_CONST    
+     str_prompt_row0                           E709      10      16       1   MY_CONST    
+     str_prompt_row0_length                    E719       1       1       1   MY_CONST    
+     str_prompt_row1                           E71A      10      16       1   MY_CONST    
+     str_prompt_row1_length                    E72A       1       1       1   MY_CONST    
 
 *********************************************************************************************
 MODULE STATISTIC
@@ -148,10 +185,11 @@ MODULE STATISTIC
 ---------------------------------------------------------------------------------------------
   bus_asm.obj                                  2     58      0
   i2c_driver_asm.obj                           2    153      0
-  lcd_asm.obj                                  4    350      0
+  keypad_asm.obj                               5    425      0
+  lcd_asm.obj                                  5    366      0
   led_asm.obj                                  1     36      0
   main_asm.obj                                 6    116      0
-  rtc_driver_asm.obj                          13    499     18
+  rtc_driver_asm.obj                          13    629     52
   other                                       64      4      0
 
 *********************************************************************************************
@@ -161,43 +199,58 @@ SECTION: ".init"
   main _Startup mainLoop _Vtpmovf SUB_delay SUB_delay_loop_0 SUB_delay_loop_1 
   SUB_delay_loop_2 SUB_delay_done 
 SECTION: "MY_ZEROPAGE"
-  bus_addr bus_data BitCounter Value lcd_data lcd_char_data lcd_col_idx 
-  str_length led_data SUB_delay_cnt num_samples temp temp_k Sec Min Hour Date 
-  Month Year Byte_counter 
+  bus_addr bus_data BitCounter Value keypad_data_0 keypad_data_1 
+  keypad_data_0_old keypad_data_1_old keypad_data_cmp lcd_data lcd_char_data 
+  lcd_col_idx lcd_addr str_length led_data SUB_delay_cnt num_samples temp 
+  temp_k Sec Min Hour Date Month Year Byte_counter 
 SECTION: "MyCode"
   bus_init bus_read bus_write i2c_init i2c_start i2c_stop i2c_tx_byte 
   tx_nextbit tx_setup tx_send_low tx_continue tx_ack_poll tx_done i2c_rx_byte 
   rx_nextbit rx_continue rx_low rx_ack rx_nack rx_done i2c_setup_delay 
-  i2c_bit_delay lcd_init lcd_write lcd_char lcd_str lcd_str_loop 
-  lcd_num_to_char lcd_clear lcd_goto_row0 lcd_goto_row1 led_write rtc_init 
-  rtc_set_time rtc_get_time rtc_display_data rtc_mask_data 
+  i2c_bit_delay keypad_scan keypad_interpret keypad_interpret_2 
+  keypad_interpret_3 keypad_interpret_A keypad_interpret_lower_rows_jump 
+  keypad_interpret_4 keypad_interpret_5 keypad_interpret_6 keypad_interpret_B 
+  keypad_interpret_lower_rows keypad_interpret_8 keypad_interpret_9 
+  keypad_interpret_C keypad_interpret_done_jump keypad_interpret_E 
+  keypad_interpret_0 keypad_interpret_F keypad_interpret_D 
+  keypad_interpret_done keypad_get_keypress lcd_init lcd_write lcd_char lcd_str 
+  lcd_str_loop lcd_num_to_char lcd_clear lcd_goto_addr lcd_goto_row0 
+  lcd_goto_row1 led_write rtc_init rtc_set_time rtc_get_time rtc_display_data 
+  rtc_mask_data rtc_prompt_time 
 SECTION: "MY_CONST"
-  str_date str_date_length str_time str_time_length 
+  str_date str_date_length str_time str_time_length str_prompt_row0 
+  str_prompt_row0_length str_prompt_row1 str_prompt_row1_length 
 
 *********************************************************************************************
 OBJECT LIST SORTED BY ADDRESS
      Name                                      Addr   hSize   dSize     Ref    Section   RLIB
 ---------------------------------------------------------------------------------------------
-     bus_addr                                    60       1       1       5   MY_ZEROPAGE 
-     bus_data                                    61       1       1       5   MY_ZEROPAGE 
+     bus_addr                                    60       1       1      13   MY_ZEROPAGE 
+     bus_data                                    61       1       1      13   MY_ZEROPAGE 
      BitCounter                                  62       1       1       5   MY_ZEROPAGE 
      Value                                       63       1       1       5   MY_ZEROPAGE 
-     lcd_data                                    64       1       1       3   MY_ZEROPAGE 
-     lcd_char_data                               65       1       1       2   MY_ZEROPAGE 
-     lcd_col_idx                                 66       1       1       1   MY_ZEROPAGE 
-     str_length                                  67       1       1       3   MY_ZEROPAGE 
-     led_data                                    68       1       1       5   MY_ZEROPAGE 
-     SUB_delay_cnt                               69       3       3      10   MY_ZEROPAGE 
-     num_samples                                 6C       1       1       0   MY_ZEROPAGE 
-     temp                                        6D       1       1       0   MY_ZEROPAGE 
-     temp_k                                      6E       1       1       0   MY_ZEROPAGE 
-     Sec                                         6F       2       2      12   MY_ZEROPAGE 
-     Min                                         71       2       2      12   MY_ZEROPAGE 
-     Hour                                        73       2       2      12   MY_ZEROPAGE 
-     Date                                        75       2       2      12   MY_ZEROPAGE 
-     Month                                       77       2       2      12   MY_ZEROPAGE 
-     Year                                        79       2       2      12   MY_ZEROPAGE 
-     Byte_counter                                7B       1       1       1   MY_ZEROPAGE 
+     keypad_data_0                               64       1       1       5   MY_ZEROPAGE 
+     keypad_data_1                               65       1       1       5   MY_ZEROPAGE 
+     keypad_data_0_old                           66       1       1       2   MY_ZEROPAGE 
+     keypad_data_1_old                           67       1       1       2   MY_ZEROPAGE 
+     keypad_data_cmp                             68       1       1      18   MY_ZEROPAGE 
+     lcd_data                                    69       1       1       3   MY_ZEROPAGE 
+     lcd_char_data                               6A       1       1       2   MY_ZEROPAGE 
+     lcd_col_idx                                 6B       1       1       1   MY_ZEROPAGE 
+     lcd_addr                                    6C       1       1       2   MY_ZEROPAGE 
+     str_length                                  6D       1       1       3   MY_ZEROPAGE 
+     led_data                                    6E       1       1       5   MY_ZEROPAGE 
+     SUB_delay_cnt                               6F       3       3      10   MY_ZEROPAGE 
+     num_samples                                 72       1       1       0   MY_ZEROPAGE 
+     temp                                        73       1       1       0   MY_ZEROPAGE 
+     temp_k                                      74       1       1       0   MY_ZEROPAGE 
+     Sec                                         75       2       2      14   MY_ZEROPAGE 
+     Min                                         77       2       2      14   MY_ZEROPAGE 
+     Hour                                        79       2       2      14   MY_ZEROPAGE 
+     Date                                        7B       2       2      14   MY_ZEROPAGE 
+     Month                                       7D       2       2      14   MY_ZEROPAGE 
+     Year                                        7F       2       2      14   MY_ZEROPAGE 
+     Byte_counter                                81       1       1       1   MY_ZEROPAGE 
      main                                      E000       0       0       0   .init       
      _Startup                                  E000      27      39       0   .init       
      mainLoop                                  E027       5       5       0   .init       
@@ -208,8 +261,8 @@ OBJECT LIST SORTED BY ADDRESS
      SUB_delay_loop_2                          E060      10      16       0   .init       
      SUB_delay_done                            E070       4       4       0   .init       
      bus_init                                  E074       A      10       1   MyCode      
-     bus_read                                  E07E      1A      26       0   MyCode      
-     bus_write                                 E098      16      22       3   MyCode      
+     bus_read                                  E07E      1A      26       4   MyCode      
+     bus_write                                 E098      16      22       7   MyCode      
      i2c_init                                  E0AE       D      13       1   MyCode      
      i2c_start                                 E0BB       8       8       3   MyCode      
      i2c_stop                                  E0C3       A      10       3   MyCode      
@@ -229,33 +282,60 @@ OBJECT LIST SORTED BY ADDRESS
      rx_done                                   E131       D      13       0   MyCode      
      i2c_setup_delay                           E13E       3       3       5   MyCode      
      i2c_bit_delay                             E141       6       6       6   MyCode      
-     lcd_init                                  E147      9A     154       1   MyCode      
-     lcd_write                                 E1E1      39      57      20   MyCode      
-     lcd_char                                  E21A      2B      43      17   MyCode      
-     lcd_str                                   E245       2       2       2   MyCode      
-     lcd_str_loop                              E247      18      24       0   MyCode      
-     lcd_num_to_char                           E25F       3       3      12   MyCode      
-     lcd_clear                                 E262      2D      45       1   MyCode      
-     lcd_goto_row0                             E28F       B      11       1   MyCode      
-     lcd_goto_row1                             E29A       B      11       1   MyCode      
-     led_write                                 E2A5      24      36       1   MyCode      
-     rtc_init                                  E2C9      28      40       1   MyCode      
-     rtc_set_time                              E2F1      5F      95       1   MyCode      
-     rtc_get_time                              E350      6F     111       1   MyCode      
-     rtc_display_data                          E3BF      9C     156       1   MyCode      
-     rtc_mask_data                             E45B      61      97       1   MyCode      
-     str_date                                  E4BC       8       8       1   MY_CONST    
-     str_date_length                           E4C4       1       1       1   MY_CONST    
-     str_time                                  E4C5       8       8       1   MY_CONST    
-     str_time_length                           E4CD       1       1       1   MY_CONST    
+     keypad_scan                               E147      8E     142       1   MyCode      
+     keypad_interpret                          E1D5      1C      28       1   MyCode      
+     keypad_interpret_2                        E1F1       F      15       0   MyCode      
+     keypad_interpret_3                        E200       F      15       0   MyCode      
+     keypad_interpret_A                        E20F      11      17       0   MyCode      
+     keypad_interpret_lower_rows_jump          E220       2       2       0   MyCode      
+     keypad_interpret_4                        E222       F      15       0   MyCode      
+     keypad_interpret_5                        E231       F      15       0   MyCode      
+     keypad_interpret_6                        E240       F      15       0   MyCode      
+     keypad_interpret_B                        E24F       C      12       0   MyCode      
+     keypad_interpret_lower_rows               E25B      1B      27       0   MyCode      
+     keypad_interpret_8                        E276       F      15       0   MyCode      
+     keypad_interpret_9                        E285       F      15       0   MyCode      
+     keypad_interpret_C                        E294       E      14       0   MyCode      
+     keypad_interpret_done_jump                E2A2       2       2       0   MyCode      
+     keypad_interpret_E                        E2A4       F      15       0   MyCode      
+     keypad_interpret_0                        E2B3       F      15       0   MyCode      
+     keypad_interpret_F                        E2C2       C      12       0   MyCode      
+     keypad_interpret_D                        E2CE       F      15       0   MyCode      
+     keypad_interpret_done                     E2DD       3       3       0   MyCode      
+     keypad_get_keypress                       E2E0      10      16      12   MyCode      
+     lcd_init                                  E2F0      9A     154       1   MyCode      
+     lcd_write                                 E38A      39      57      22   MyCode      
+     lcd_char                                  E3C3      2B      43      30   MyCode      
+     lcd_str                                   E3EE       2       2       4   MyCode      
+     lcd_str_loop                              E3F0      18      24       0   MyCode      
+     lcd_num_to_char                           E408       3       3      12   MyCode      
+     lcd_clear                                 E40B      2D      45       2   MyCode      
+     lcd_goto_addr                             E438      10      16       6   MyCode      
+     lcd_goto_row0                             E448       B      11       2   MyCode      
+     lcd_goto_row1                             E453       B      11       2   MyCode      
+     led_write                                 E45E      24      36       2   MyCode      
+     rtc_init                                  E482      28      40       1   MyCode      
+     rtc_set_time                              E4AA      5F      95       1   MyCode      
+     rtc_get_time                              E509      6F     111       1   MyCode      
+     rtc_display_data                          E578      9C     156       1   MyCode      
+     rtc_mask_data                             E614      61      97       1   MyCode      
+     rtc_prompt_time                           E675      82     130       0   MyCode      
+     str_date                                  E6F7       8       8       1   MY_CONST    
+     str_date_length                           E6FF       1       1       1   MY_CONST    
+     str_time                                  E700       8       8       1   MY_CONST    
+     str_time_length                           E708       1       1       1   MY_CONST    
+     str_prompt_row0                           E709      10      16       1   MY_CONST    
+     str_prompt_row0_length                    E719       1       1       1   MY_CONST    
+     str_prompt_row1                           E71A      10      16       1   MY_CONST    
+     str_prompt_row1_length                    E72A       1       1       1   MY_CONST    
 
 *********************************************************************************************
 UNUSED-OBJECTS SECTION
 ---------------------------------------------------------------------------------------------
 NOT USED VARIABLES
 main_asm.obj:
-  INTACC1 INTACC2 keypad_data_0 adc_data_0 keypad_data_1 adc_data_1 str_prompt 
-  str_prompt_length str_TK str_TK_length str_TC str_TC_length 
+  INTACC1 INTACC2 adc_data_0 adc_data_1 str_prompt str_prompt_length str_TK 
+  str_TK_length str_TC str_TC_length 
 
 *********************************************************************************************
 COPYDOWN SECTION
@@ -284,6 +364,27 @@ i2c_rx_byte               USES Value BitCounter
 rx_nextbit                USES i2c_bit_delay Value i2c_setup_delay 
 rx_low                    USES BitCounter 
 rx_done                   USES i2c_setup_delay i2c_bit_delay Value 
+keypad_scan               USES keypad_data_0 keypad_data_0_old keypad_data_1 
+                                keypad_data_1_old bus_addr bus_data bus_write bus_read 
+keypad_interpret          USES keypad_data_0_old keypad_data_0 keypad_data_cmp 
+                                lcd_char 
+keypad_interpret_2        USES keypad_data_cmp lcd_char 
+keypad_interpret_3        USES keypad_data_cmp lcd_char 
+keypad_interpret_A        USES keypad_data_cmp lcd_char 
+keypad_interpret_4        USES keypad_data_cmp lcd_char 
+keypad_interpret_5        USES keypad_data_cmp lcd_char 
+keypad_interpret_6        USES keypad_data_cmp lcd_char 
+keypad_interpret_B        USES keypad_data_cmp 
+keypad_interpret_lower_rows USES keypad_data_1_old keypad_data_1 
+                                keypad_data_cmp lcd_char 
+keypad_interpret_8        USES keypad_data_cmp lcd_char 
+keypad_interpret_9        USES keypad_data_cmp lcd_char 
+keypad_interpret_C        USES keypad_data_cmp 
+keypad_interpret_E        USES keypad_data_cmp lcd_char 
+keypad_interpret_0        USES keypad_data_cmp lcd_char 
+keypad_interpret_F        USES keypad_data_cmp 
+keypad_interpret_D        USES keypad_data_cmp lcd_char 
+keypad_get_keypress       USES led_write keypad_scan keypad_interpret 
 lcd_init                  USES SUB_delay_cnt SUB_delay lcd_write 
 lcd_write                 USES lcd_data bus_data bus_addr bus_write 
                                 SUB_delay_cnt SUB_delay 
@@ -291,6 +392,7 @@ lcd_char                  USES lcd_char_data lcd_write SUB_delay_cnt SUB_delay
 lcd_str                   USES str_length 
 lcd_str_loop              USES lcd_char str_length 
 lcd_clear                 USES SUB_delay_cnt SUB_delay lcd_write 
+lcd_goto_addr             USES lcd_addr lcd_write 
 lcd_goto_row0             USES lcd_write 
 lcd_goto_row1             USES lcd_write 
 led_write                 USES bus_addr led_data bus_data bus_write 
@@ -304,6 +406,10 @@ rtc_display_data          USES lcd_clear lcd_goto_row0 str_date
                                 Year lcd_goto_row1 str_time str_time_length Hour 
                                 Min Sec 
 rtc_mask_data             USES Sec Min Hour Date Month Year 
+rtc_prompt_time           USES lcd_clear lcd_goto_row0 str_prompt_row0 
+                                str_prompt_row0_length lcd_str lcd_goto_row1 str_prompt_row1 
+                                str_prompt_row1_length lcd_goto_addr keypad_get_keypress Month Date 
+                                Year Hour Min Sec 
 
 *********************************************************************************************
 DEPENDENCY TREE
@@ -392,6 +498,6 @@ STATISTIC SECTION
 
 ExeFile:
 --------
-Number of blocks to be downloaded: 3
-Total size of all blocks to be downloaded: 1234
+Number of blocks to be downloaded: 4
+Total size of all blocks to be downloaded: 1839
 
