@@ -39,7 +39,7 @@
             XREF rtc_init, rtc_set_time_zero, rtc_calc_tod, rtc_write_tod, rtc_set_time, rtc_get_time, rtc_display_data, rtc_prompt_time
             XREF Sec, Min, Hour, Date, Month, Year
             
-            XREF lm92_init, lm92_read_temp, lm92_write_lcd
+            XREF lm92_init, lm92_read_temp, lm92_write_lcd_K, lm92_write_lcd_C
 
 
 ; variable/data section
@@ -74,6 +74,12 @@ MY_CONST: SECTION
 			str_A_top_length:		DC.B	16			
 			str_A_bottom:			DC.B 	"T92:   K@T=000s "	
 			str_A_bottom_length:	DC.B	16	
+			
+			
+			str_B_prompt_top:		DC.B 	"Target Temp?    "
+			str_B_prompt_top_len:	DC.B	16
+			str_B_prompt_bottom:	DC.B 	"Enter 10-40C "
+			str_B_prompt_bottom_len:DC.B	13
 			
 			str_B_top_heat:			DC.B 	"TEC State:HeatXX"	
 			str_B_top_cool:			DC.B 	"TEC State:CoolXX"
@@ -179,7 +185,7 @@ restart_loop:
 			CBEQA	#$0A, A_mainLoop
 			
 			; was 'B' pressed?
-			CBEQA	#$0B, B_mainLoop
+			CBEQA	#$0B, B_mainLoop_start
 			
 			BRA		restart_loop
 
@@ -237,13 +243,55 @@ A_mainLoop_cont:
 			
 ;**************************************************************
 
+jmp_restart:
+			JMP		restart
+
 ;************************************************************** 
-;* Subroutine Name: B_mainLoop 
+;* Subroutine Name: B_mainLoop_start 
 ;* Description: Main loop for mode B
 ;* Registers Modified: A,X,H
 ;* Entry Variables: None
 ;* Exit Variables: None 
 ;**************************************************************
+B_mainLoop_start:
+			
+			; prompt for Tset
+			JSR		lcd_goto_row0
+			LDHX	#str_B_prompt_top
+			LDA		str_B_prompt_top_len
+			JSR		lcd_str
+			
+			JSR		lcd_goto_row1
+			LDHX	#str_B_prompt_bottom
+			LDA		str_B_prompt_bottom_len
+			JSR		lcd_str
+			
+B_mainLoop_start_loop:	
+		
+			; set mode
+			MOV		#$0B, mode
+
+			feed_watchdog			
+			
+			; scan keypad
+			JSR		keypad_scan
+			JSR		keypad_interpret
+			
+			; was '*' pressed
+			CBEQA	#$0E, jmp_restart
+			
+			; was '#' pressed
+			CBEQA	#$0F, B_mainLoop
+			
+			; was nothing presed
+			CBEQA	#$FF, B_mainLoop_start_loop
+			
+			;*** read in Tset here ***
+			
+			
+			BRA		B_mainLoop_start_loop
+			
+			
 B_mainLoop:			
 			; set mode
 			MOV		#$0B, mode
@@ -255,7 +303,7 @@ B_mainLoop:
 			JSR		keypad_interpret
 			
 			; was '*' pressed
-			CBEQA	#$0E, restart
+			CBEQA	#$0E, jmp_restart
 			
 			; if state = 0x00, do nothing
 			LDA		TEC_state
@@ -393,7 +441,7 @@ A_update_devices_tec_write:
 			; set LCD cursor position
 			LDA		#$C4
 			JSR		lcd_goto_addr			
-			JSR		lm92_write_lcd 			
+			JSR		lm92_write_lcd_K 			
   			
 ; write time
 			; if TEC is off, don't overwrite the 000s for time
@@ -467,9 +515,27 @@ B_update_devices_tec_write:
 						
 ; write LM92 temp
 			; set LCD cursor position
-			LDA		#$C4
+			LDA		#$C5
 			JSR		lcd_goto_addr			
-			JSR		lm92_write_lcd 			
+			JSR		lm92_write_lcd_C 	
+						
+; write Tset temp
+			; set LCD cursor position
+			LDA		#$8E
+			JSR		lcd_goto_addr	
+			
+			; write upper number to LCD
+			LDA		Tset
+			LDHX	#$000A
+			DIV						; A <= (H:A)/(X), H <= (remainder)
+			JSR		lcd_num_to_char
+			JSR		lcd_char
+
+			; write upper number to LCD
+			PSHH
+			PULA
+			JSR		lcd_num_to_char
+			JSR		lcd_char			
   			
 ; write time
 			; if TEC is off, don't overwrite the 000s for time

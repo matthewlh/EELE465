@@ -18,7 +18,7 @@ LM92_REG_TEMP		EQU	$00		; register address of the seconds register
             INCLUDE 'MC9S08QG8.inc'
             
 ; export symbols
-            XDEF lm92_init, lm92_read_temp, lm92_write_lcd
+            XDEF lm92_init, lm92_read_temp, lm92_write_lcd_K, lm92_write_lcd_C
             
 ; import symbols
 			XREF i2c_init, i2c_start, i2c_stop, i2c_tx_byte, i2c_rx_byte
@@ -123,14 +123,15 @@ lm92_read_temp:
 
 
 ;************************************************************** 
-;* Subroutine Name: lm92_write_lcd  
-;* Description: Writes the temperature in Accu A to the LCD.
+;* Subroutine Name: lm92_write_lcd_K  
+;* Description: Writes the temperature in Accu A to the LCD
+;*				in degrees Kelvin
 ;* 
 ;* Registers Modified: Accu A
 ;* Entry Variables: Temp_c
 ;* Exit Variables: None
 ;**************************************************************
-lm92_write_lcd:
+lm92_write_lcd_K:
 
 			LDA		Temp_c
 			
@@ -185,6 +186,48 @@ cont:
 			RTS
 			
 ;**************************************************************
+
+
+
+;************************************************************** 
+;* Subroutine Name: lm92_write_lcd_K  
+;* Description: Writes the temperature in Accu A to the LCD
+;*				in degrees Kelvin
+;* 
+;* Registers Modified: Accu A
+;* Entry Variables: Temp_c
+;* Exit Variables: None
+;**************************************************************
+lm92_write_lcd_C:
+
+			LDA		Temp_c
+
+			; write upper number to LCD
+			LDHX	#$000A
+			DIV						; A <= (H:A)/(X), H <= (remainder)
+
+			; convert to ASCII char
+			JSR		lcd_num_to_char
+
+			; write to LCD
+			JSR		lcd_char
+
+			; move remainder from H to A
+			PSHH
+			PULA
+
+			; convert to ASCII char
+			JSR		lcd_num_to_char
+
+			; write to LCD
+			JSR		lcd_char
+			
+			
+			; done
+			RTS
+			
+;**************************************************************
+
 
 
 

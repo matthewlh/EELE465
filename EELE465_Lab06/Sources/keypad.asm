@@ -447,7 +447,7 @@ keypad_interpret_E:
 			BNE		keypad_interpret_0
 
 			; write a 'E' to the LCD
-			LDA		#'E'
+			LDA		#'*'
 			JSR		lcd_char
 			
 			; return 0x0E
@@ -479,11 +479,11 @@ keypad_interpret_F:
 			BNE		keypad_interpret_D
 
 			; write a 'F' to the LCD
-			LDA		#'F'
-			;JSR		lcd_char
+			LDA		#'#'
+			JSR		lcd_char
 			
 			; return 0x00
-			LDA		#$00
+			LDA		#$0F
 			RTS
 
 
