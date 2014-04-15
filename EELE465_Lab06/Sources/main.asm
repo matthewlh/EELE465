@@ -76,13 +76,9 @@ MY_CONST: SECTION
 			str_A_bottom_length:	DC.B	16	
 			
 			str_B_top_heat:			DC.B 	"TEC State:HeatXX"	
-			str_B_top_heat_length:	DC.B	16			
-			str_B_top_cool:			DC.B 	"TEC State:CoolXX"	
-			str_B_top_cool_length:	DC.B	16			
-			str_B_top_hold:			DC.B 	"TEC State:HoldXX"	
-			str_B_top_hold_length:	DC.B	16			
-			str_B_bottom:			DC.B 	"T92:   K@T=000s "	
-			str_B_bottom_length:	DC.B	16	
+			str_B_top_cool:			DC.B 	"TEC State:CoolXX"
+			str_B_top_hold:			DC.B 	"TEC State:HoldXX"
+			str_B_bottom:			DC.B 	"T92:   C@T=000s "
 			
 			str_tec_heat:			DC.B 	"Heat"
 			str_tec_cool:			DC.B 	"Cool"
@@ -183,7 +179,7 @@ restart_loop:
 			CBEQA	#$0A, A_mainLoop
 			
 			; was 'B' pressed?
-			CBEQA	#$0A, B_mainLoop
+			CBEQA	#$0B, B_mainLoop
 			
 			BRA		restart_loop
 
@@ -262,27 +258,27 @@ B_mainLoop:
 			CBEQA	#$0E, restart
 			
 			; if state = 0x00, do nothing
-			LDA		state
+			LDA		TEC_state
 			BEQ		B_mainLoop_cont	
 			
 B_mainLoop_checkHold:			
 			; if Tset = Tcur, change state to hold
 			LDA		Tset
-			CBEQA	Tcur, B_mainLoop_hold
+			CBEQ	Tcur, B_mainLoop_hold
 			
 			; else do nothing
 			BRA		B_mainLoop_cont
 			
 B_mainLoop_hold:			
 			; set state
-			MOV		#$00, state	
+			MOV		#$00, TEC_state	
 
 B_mainLoop_cont:
 			; do we need to update stuff?
 			LDA		update_needed
 			BEQ		B_mainLoop
 			
-			;JSR		B_update_devices		
+			JSR		B_update_devices		
  
 			BRA		B_mainLoop
 			
@@ -402,7 +398,7 @@ A_update_devices_tec_write:
 ; write time
 			; if TEC is off, don't overwrite the 000s for time
 			LDA		TEC_state
-			CBEQA	#$00, update_devices_done
+			CBEQA	#$00, A_update_devices_done
 
 			; set LCD cursor position
 			LDA		#$CB
@@ -415,9 +411,85 @@ A_update_devices_tec_write:
 			JSR		rtc_calc_tod
 			JSR		rtc_write_tod
 			
-			BRA 	update_devices_done
+			BRA 	A_update_devices_done
 			
-update_devices_done:
+A_update_devices_done:
+;*** done
+			MOV		#$00, update_needed
+			RTS
+
+;**************************************************************
+;************************************************************** 
+;* Subroutine Name: B_update_devices 
+;* Description: 
+;*
+;* Registers Modified: A, update_needed
+;* Entry Variables: None
+;* Exit Variables: None 
+;**************************************************************
+B_update_devices:
+
+; Update LEDs and TEC
+			JSR		led_write		
+
+; write to lcd template string
+  			JSR		lcd_clear
+			
+			; set LCD cursor position
+  			JSR		lcd_goto_row0 
+
+			; write top row depending on state
+			LDA		TEC_state
+			CBEQA	#$01, B_update_devices_tec_heat
+			CBEQA	#$02, B_update_devices_tec_cool 
+
+B_update_devices_tec_hold:
+			LDHX	#str_B_top_hold			
+			BRA		B_update_devices_tec_write
+						
+B_update_devices_tec_heat:
+			LDHX	#str_B_top_heat			
+			BRA		B_update_devices_tec_write
+
+B_update_devices_tec_cool:
+			LDHX	#str_B_top_cool		
+			BRA		B_update_devices_tec_write
+
+B_update_devices_tec_write:
+			LDA		#$10
+			JSR		lcd_str
+			
+			; write LCD bottom row
+			JSR		lcd_goto_row1
+			LDHX	#str_B_bottom
+			LDA		#$10
+			JSR		lcd_str 
+						
+; write LM92 temp
+			; set LCD cursor position
+			LDA		#$C4
+			JSR		lcd_goto_addr			
+			JSR		lm92_write_lcd 			
+  			
+; write time
+			; if TEC is off, don't overwrite the 000s for time
+			LDA		TEC_state
+			CBEQA	#$00, B_update_devices_done
+
+			; set LCD cursor position
+			LDA		#$CB
+			JSR		lcd_goto_addr
+  			
+  			; read time from RTC
+  			JSR		rtc_get_time
+			
+			; calc and write TOD
+			JSR		rtc_calc_tod
+			JSR		rtc_write_tod
+			
+			BRA 	B_update_devices_done
+			
+B_update_devices_done:
 ;*** done
 			MOV		#$00, update_needed
 			RTS
