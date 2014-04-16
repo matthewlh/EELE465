@@ -1,5 +1,5 @@
 ;************************************************************** 
-;* File Name    : 	rtc_driver.asm 
+;* File Name    : main.asm 
 ;* Program Name	: Lab#05 - RTC and I2C
 ;* Author Names	: Matthew Handley 
 ;* Date			: 2014-04-03
