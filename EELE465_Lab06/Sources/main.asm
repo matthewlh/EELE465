@@ -1,9 +1,10 @@
 ;************************************************************** 
-;* Program Name: Lab#03 - ADC
-;* Author Names: Matthew Handley 
-;* Date: 2014-02-25
-;* Description: Does stuff and stuff.
-;*
+;* File Name    : main.asm
+;* Program Name	: Lab#03 - TEC Module
+;* Author Names	: Matthew Handley 
+;* Date			: 2014-04-24
+;* Description	: Drives a TEC module directly from user input,
+;*		    	or automatically based on a temperature set point.
 ;* 
 ;**************************************************************
 
@@ -443,7 +444,7 @@ _Vtpmovf_heartbeat:
 ;**************************************************************
 
 ;************************************************************** 
-;* Subroutine Name: update_devices 
+;* Subroutine Name: A_update_devices 
 ;* Description: 
 ;*
 ;* Registers Modified: A, update_needed
